@@ -1,3 +1,9 @@
+/* global _ */
+/* exported  drill, getPieChartData, getBarChartData, convertPieToBarData,
+             getFirstProperty, objectToArray, getPathMappings,
+             sliceByStringElement, groupOthers, endsWith, contains, truncNb,
+             int2roundKMG, int2roundM */
+
 /**
  * @license Put name and version
  * (c) 2013-2014 Nasara Holdings. http://nasara.com
