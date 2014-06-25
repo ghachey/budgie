@@ -8,7 +8,8 @@
 /* Budget controller(s) */
 
 angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
-  .controller('BudgetCtrl', ['$scope', '$location', '$routeParams', 'BudgetFactory', function ($scope, $location, $routeParams, BudgetFactory) {
+
+  .controller('BudgetCtrl', ['$scope', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $location, $routeParams, $log, BudgetFactory) {
 
     var rawFromCouch = {}; // Keep the complete data set in frontend
     var rawFromDrill = {}; // Current mashed-up reduced data of interest
@@ -16,21 +17,22 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     var path = 'root'; // Initialize path to root of budget data tree
     var drillableMappings = {'Other': true}; // Current drillable mappings
     var country = $routeParams.country ? $routeParams.country : 'png';
-
     var countries = {
       'vu': 'Vanuatu',
       'png': 'Papua New Guinea',
       'tl': 'Timor Leste'
     };
-    $scope.countryName = $scope.countryName ? $scope.countryName : countries[country];
+
+    $scope.countryName = $scope.countryName ? 
+      $scope.countryName : countries[country];
 
     $scope.currentYear = $routeParams.year ? $routeParams.year : '2014';
 
     // Don't want to cut the functionality just yet...
     $scope.showButtons = $routeParams.country ==='razzle-dazzle' ? true : false;
 
-    $scope.currentDocument = $scope.currentDocument? $scope.currentDocument : country + '-' + $scope.currentYear;
-
+    $scope.currentDocument = $scope.currentDocument ? 
+      $scope.currentDocument : country + '-' + $scope.currentYear;
 
     // Use this for roll-up / unroll animations.
     var emptyPie = [{ 
@@ -95,13 +97,13 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     BudgetFactory
       .get($scope.currentDocument)
       .success(function(data, status, headers, config) {
-        console.log(data,status,headers,config);
+        $log.debug(data, status, headers, config);
 
 	pathMappings = getPathMappings(data);
-	console.debug('Path mappings: ', pathMappings);
+	$log.debug('Path mappings: ', pathMappings);
 
 	rawFromCouch = data; 
-	console.debug('Data as stored in CouchDB: ',rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
@@ -109,7 +111,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	// information box summary data...).
 
 	rawFromDrill = drill(rawFromCouch,path, $scope.currentYear);
-	console.log('Data as processed by drill: ',rawFromDrill);
+	$log.debug('Data as processed by drill: ', rawFromDrill);
 
 	$scope.budgetCurrency = rawFromCouch.root.currency ? 
           rawFromCouch.root.currency.toUpperCase() : '';
@@ -122,17 +124,15 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       })
       .error(function(data, status, headers, config) {
-        console.error(data,status,headers,config);
+        $log.error(data,status,headers,config);
       });
 
     var process = function () {
-      
-      console.log('Processing data for display...');
-
+      $log.info('Processing data for display...');
       // Pie chart side
       $scope.name = rawFromDrill.name;
       $scope.level = rawFromDrill.level;
-      console.log('Pie Data:', getPieChartData(rawFromDrill.categories));
+      $log.debug('Pie Data:', getPieChartData(rawFromDrill.categories));
 
       var pie = getPieChartData(rawFromDrill.categories);
 
@@ -146,7 +146,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	drillableMappings[elem.name] = elem.drillable;
       });
 
-      console.log('Drillables: ', drillableMappings);
+      $log.debug('Drillables: ', drillableMappings);
 
       if( Object.prototype.toString.call( pie ) === '[object Array]' ) {
 	// No grouping into 'others'
@@ -200,15 +200,15 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     };
 
     $scope.$on('tooltipShow.directive', function(event){
-      console.debug('scope.tooltipShow', event);
+      $log.debug('scope.tooltipShow: ', event);
     });
 
     $scope.$on('tooltipHide.directive', function(event){
-      console.debug('scope.tooltipHide', event);
+      $log.debug('scope.tooltipHide: ', event);
     });
 
     $scope.$on('stateChange.directive', function(event){
-      console.debug('stateChange.directive', event);
+      $log.debug('stateChange.directive: ', event);
     });
 
     $scope.$on('elementClick.directive', function(event,data){
@@ -217,16 +217,16 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       // change if logic here...but first get things working
       if (data.label === 'Other') {
-	console.log('Path: ', path);
+	$log.debug('Path: ', path);
 	$scope.showOthers = true;
       } else {
-	console.log('Before push: ', rawFromDrill);
+	$log.debug('Before push: ', rawFromDrill);
 	
 	if (drillableMappings[data.label] === true) {
 	  $scope.breadcrumbs.push(data.label);
 	}
 	path = pathMappings[data.label];
-	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
       }	    
       $scope.nextPalette();
 
@@ -248,7 +248,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       BudgetFactory
         .get($scope.currentDocument)
         .success(function(data, status, headers, config) {
-          console.log(data, status, headers, config);
+          $log.debug(data, status, headers, config);
 	  pathMappings = getPathMappings(data);
 	  path = 'root';
 	  rawFromCouch = data; 
@@ -261,7 +261,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
 	})
         .error(function(data, status, headers, config) {
-          console.error(data, status, headers, config);
+          $log.error(data, status, headers, config);
 	});
       
     };
@@ -278,7 +278,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
     // $scope.LegendController = function($scope){
     //   //NOOP
-    //   console.debug('FOO');
+    //   $log.debug('FOO');
 
     // };
 
@@ -286,7 +286,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       args = args ? args : ['Foo','Bar','Baz','Quux'];
 
-      console.debug('Just stoppin by...');
+      $log.info('Just stoppin by...');
       return args;
 
     };
@@ -978,26 +978,26 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
     BudgetFactory
       .get(currentDocument)
       .success(function(data, status, headers, config) {
-        console.log(data, status, headers, config);
+        $log.debug(data, status, headers, config);
 	pathMappings = getPathMappings(data);
-	console.debug('Path mappings: ', pathMappings);
+	$log.debug('Path mappings: ', pathMappings);
 
 	rawFromCouch = data; 
-	console.debug('Data as stored in CouchDB: ',rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
 	// features (chart data, further drill paths,
 	// information box summary data...).
 
-	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
-	console.log('Data as processed by drill: ',rawFromDrill);
+	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
+	$log.debug('Data as processed by drill: ', rawFromDrill);
 	$scope.annualTotal = int2roundKMG(rawFromDrill.data[$scope.currentYear].aggr.toString());
 	process();
 
       })
       .error(function(data, status, headers, config) {
-        console.error(data, status, headers, config);
+        $log.error(data, status, headers, config);
       });
 
     var process = function () {
@@ -1005,7 +1005,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       // Pie chart side
       $scope.name = rawFromDrill.name;
       $scope.level = rawFromDrill.level;
-      console.log('Pie Data:', getPieChartData(rawFromDrill.categories));
+      $log.debug('Pie Data:', getPieChartData(rawFromDrill.categories));
 
       var pie = getPieChartData(rawFromDrill.categories);
 
@@ -1058,14 +1058,14 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 
       $scope.vuNPPs = [];
       $scope.radioModel = which.toString();
-      console.debug('Current year: ', $scope.radioModel);
+      $log.debug('Current year: ', $scope.radioModel);
 
       currentDocument = 'vu-npps-' + $scope.radioModel;
 
       BudgetFactory
         .get(currentDocument)
         .success(function(data, status, headers, config) {
-          console.log(data, status, headers, config);
+          $log.debug(data, status, headers, config);
 	  $scope.currentYear    = which.toString();
 	  $scope.currentPalette = palettes[parseFloat($scope.currentYear) - 2012];
 	  pathMappings           = getPathMappings(data);
@@ -1073,13 +1073,13 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 	  rawFromCouch           = data; 
 
 	  rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
-	  console.debug('RAW: ', rawFromDrill);
+	  $log.debug('RAW: ', rawFromDrill);
 	  $scope.annualTotal = int2roundKMG(rawFromDrill.data[$scope.currentYear].aggr.toString());
 	  process();
 
 	})
         .error(function(data, status, headers, config) {
-          console.error(data, status, headers, config);
+          $log.error(data, status, headers, config);
 	});
 
     };
@@ -1097,6 +1097,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
   }]);
 
 angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAnimate'])
+
   .controller('budgetTimeline', ['$scope', function ($scope) {
 
     $scope.width  = '100%';
@@ -1246,7 +1247,7 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
     };
 
     $scope.newTimeline = function (){
-      console.debug('Welp, at least it\'s running...');
+      $log.debug('Welp, at least it\'s running...');
       createStoryJS({
 	type: 'timeline',
 	embed_id: 'budgetTimeline',

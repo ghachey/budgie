@@ -4,7 +4,7 @@
 conf = {
     # Database configuration
     'couchdb': 'http://localhost:5984/',
-    'couchdb_database': 'pipp_data',
+    'couchdb_database': 'pipp_data_v2',
     'couchdb_databasetest': 'pipp_data_test',
 
     # Configure which host is allowed cross origin access to the backend
@@ -21,14 +21,14 @@ conf = {
 dev_conf = {
     # Database configuration
     'couchdb': 'http://localhost:5984/',
-    'couchdb_database': 'pipp_data',
+    'couchdb_database': 'pipp_data_v2',
     'couchdb_databasetest': 'pipp_data_test',
 
     # Configure which host is allowed cross origin access to the backend
     # Can take exact strings and regexes
     'allowed' : (
-	'http://freswota:8080',
-	'http://localhost:8080',
+        'http://freswota:8080',
+        'http://localhost:8080',
         'http://localhost:9000',
-        ),
+    ),
 }
