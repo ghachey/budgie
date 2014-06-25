@@ -13,9 +13,9 @@
     "angular-route": "1.2.0",
     "angular-animate": "1.2.0",
     "underscore": "~1.5.2",
-    "angularjs-nvd3-directives": "git@github.com:ghachey/angularjs-nvd3-directives.git#~0.0.2-beta",
     "angular-ui-bootstrap": "~0.7.0",
-    "TimelineJS": "git@github.com:NUKnightLab/TimelineJS.git"
+    "TimelineJS": "git@github.com:NUKnightLab/TimelineJS.git",
+    "angularjs-nvd3-directives": "~0.0.7"
   },
   "devDependencies": {
     "angular-mocks": "1.2.0",
@@ -23,6 +23,7 @@
   },
   "resolutions": {
     "angular": "1.2.0",
-    "d3": "3.3.11"
+    "d3": "3.3.5",
+    "nvd3": "~v1.1.15-beta"
   }
 }
