@@ -1,6 +1,6 @@
 /* global 
  getPathMappings, drill, getPieChartData, int2roundKMG, sliceByStringElement, 
- int2roundM, getBarChartData, createStoryJS 
+ int2roundM, getBarChartData, getPercentageHistory, createStoryJS 
  */
 
 'use strict';
@@ -16,23 +16,22 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     var pathMappings = {}; // Convenient path mappings
     var path = 'root'; // Initialize path to root of budget data tree
     var drillableMappings = {'Other': true}; // Current drillable mappings
-    var country = $routeParams.country ? $routeParams.country : 'png';
+    var country = $scope.country ? $scope.country : $routeParams.country;
+
     var countries = {
-      'vu': 'Vanuatu',
+      'vu':  'Vanuatu',
       'png': 'Papua New Guinea',
-      'tl': 'Timor Leste'
+      'tl':  'Timor Leste',
+      'ki':  'Kiribati'
     };
 
-    $scope.countryName = $scope.countryName ? 
-      $scope.countryName : countries[country];
+    $scope.countryName = $scope.countryName ? $scope.countryName : countries[country];
+    $scope.currentYear = $scope.currentYear ? $scope.currentYear : $routeParams.year;
 
-    $scope.currentYear = $routeParams.year ? $routeParams.year : '2014';
-
+    $log.debug('Current year' , $scope.currentYear);
     // Don't want to cut the functionality just yet...
     $scope.showButtons = $routeParams.country ==='razzle-dazzle' ? true : false;
-
-    $scope.currentDocument = $scope.currentDocument ? 
-      $scope.currentDocument : country + '-' + $scope.currentYear;
+    $scope.currentDocument = $scope.currentDocument? $scope.currentDocument : country + '-' + $scope.currentYear;
 
     // Use this for roll-up / unroll animations.
     var emptyPie = [{ 
@@ -97,13 +96,11 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     BudgetFactory
       .get($scope.currentDocument)
       .success(function(data, status, headers, config) {
-        $log.debug(data, status, headers, config);
-
+        $log.debug('Success callback: ', data, status, headers, config);
 	pathMappings = getPathMappings(data);
 	$log.debug('Path mappings: ', pathMappings);
-
 	rawFromCouch = data; 
-	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ',rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
@@ -111,12 +108,10 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	// information box summary data...).
 
 	rawFromDrill = drill(rawFromCouch,path, $scope.currentYear);
-	$log.debug('Data as processed by drill: ', rawFromDrill);
+	$log.debug('Data as processed by drill: ',rawFromDrill);
 
-	$scope.budgetCurrency = rawFromCouch.root.currency ? 
-          rawFromCouch.root.currency.toUpperCase() : '';
-	$scope.currencyMultiplier = rawFromCouch.root.multiplier ? 
-          rawFromCouch.root.multiplier : 1;
+	$scope.budgetCurrency = rawFromCouch.root.currency ? rawFromCouch.root.currency.toUpperCase() : '';
+	$scope.currencyMultiplier = rawFromCouch.root.multiplier ? rawFromCouch.root.multiplier : 1;
 
 	$scope.breadcrumbs.push(rawFromDrill.name);
 
@@ -124,11 +119,13 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       })
       .error(function(data, status, headers, config) {
-        $log.error(data,status,headers,config);
+        $log.error('Error callback: ', data, status, headers, config);
       });
 
     var process = function () {
-      $log.info('Processing data for display...');
+      
+      $log.debug('Processing data for display...');
+
       // Pie chart side
       $scope.name = rawFromDrill.name;
       $scope.level = rawFromDrill.level;
@@ -163,13 +160,27 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       // Information box and bar chart side. 
       $scope.notes = rawFromDrill.notes;
       $scope.stackedBarChartData = getBarChartData(rawFromDrill.data);
+      $scope.showPercentage = false;
+      if ((country === 'ki') && typeof($scope.level) !== 'undefined'){
+	$scope.showPercentage = true;
+	$scope.percentageHistory = getPercentageHistory(rawFromDrill.data);
+      }
 
+      if ($scope.breadcrumbs[$scope.breadcrumbs.length - 1] === $scope.name){
+	$scope.historyLabel = $scope.breadcrumbs[$scope.breadcrumbs.length - 2];
+      }
+      else {
+	$scope.historyLabel = $scope.breadcrumbs[$scope.breadcrumbs.length - 1];
+      }
+
+      if (typeof($scope.historyLabel) !== 'undefined') {
+	$scope.historyLabel.replace(/Spending/, '');
+      }
 
     };
 
-    $scope.tooltipContent = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.tooltipContent = function(key, x, y) {
+
       var notes = '';
       if (typeof($scope.notes) !== 'undefined'){
 	notes = '<p><em>' + $scope.notes + '</em></p>';
@@ -180,9 +191,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	notes;
     };
 
-    $scope.barChartTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.barChartTooltips = function(key, x, y) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + '<br />' + $scope.budgetCurrency + '</p>';
     };
@@ -200,15 +209,15 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     };
 
     $scope.$on('tooltipShow.directive', function(event){
-      $log.debug('scope.tooltipShow: ', event);
+      $log.debug('scope.tooltipShow', event);
     });
 
     $scope.$on('tooltipHide.directive', function(event){
-      $log.debug('scope.tooltipHide: ', event);
+      $log.debug('scope.tooltipHide', event);
     });
-
+    
     $scope.$on('stateChange.directive', function(event){
-      $log.debug('stateChange.directive: ', event);
+      $log.debug('stateChange.directive', event);
     });
 
     $scope.$on('elementClick.directive', function(event,data){
@@ -226,12 +235,12 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	  $scope.breadcrumbs.push(data.label);
 	}
 	path = pathMappings[data.label];
-	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
+	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
       }	    
       $scope.nextPalette();
-
-      process();
       
+      process();
+
     });
 
     $scope.radioModel =  'spending';
@@ -242,13 +251,12 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       $scope.radioModel = which;
       $scope.currentDocument = country + '-' + $scope.currentYear;
-      $scope.currentDocument = which !== 'spending' ? 
-        $scope.currentDocument + '-' + which : $scope.currentDocument;
+      $scope.currentDocument = which !== 'spending' ? $scope.currentDocument + '-' + which : $scope.currentDocument;
 
       BudgetFactory
         .get($scope.currentDocument)
         .success(function(data, status, headers, config) {
-          $log.debug(data, status, headers, config);
+          $log.debug('Success callback: ', data, status, headers, config);
 	  pathMappings = getPathMappings(data);
 	  path = 'root';
 	  rawFromCouch = data; 
@@ -261,9 +269,9 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
 	})
         .error(function(data, status, headers, config) {
-          $log.error(data, status, headers, config);
+          $log.error('Error callback: ', data, status, headers, config);
 	});
-      
+
     };
 
     $scope.reloadBreadcrumbs = function(crumb){
@@ -275,18 +283,11 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       process();
     };	
 
-
-    // $scope.LegendController = function($scope){
-    //   //NOOP
-    //   $log.debug('FOO');
-
-    // };
-
     $scope.getLabels = function(args){
 
       args = args ? args : ['Foo','Bar','Baz','Quux'];
 
-      $log.info('Just stoppin by...');
+      $log.debug('Just stoppin by...');
       return args;
 
     };
@@ -320,12 +321,25 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       };
     };
 
+    $scope.formatLineChartTicks = function () {
+      return function(d) {
+	return d % 1 === 0 ? d : '';
+      };
+    };
+
+
+    $scope.percentageHistoryTooltips = function(key, x, y) {
+      return '<h3>' + $scope.name + '</h3>' +
+	'<p>' + y + '% of Overall ' + $scope.historyLabel + ' Spending<br />' + 
+	'in ' + x + '</p>';
+    };
 
   }]);
 
 // One-off charts controller
 angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
-  .controller('oneOffChartsCtrl', ['$scope', function ($scope) {
+
+  .controller('oneOffChartsCtrl', ['$scope', '$location', '$routeParams', '$log', function ($scope, $location, $routeParams, $log) {
 
     // Pushed a brewer palette pair into the first two positions.
     // Otherwise, it's the nvd3 default 20 colour palette
@@ -788,12 +802,10 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
      */
 
-    $scope.lineChartTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
-      
-      // Never used 
-      // var otherIndex = e.seriesIndex === 0 ? 1 : 0;
+    $scope.lineChartTooltips = function(key, x, y) {
+
+      // otherIndex never used, dead code?
+      //var otherIndex = e.seriesIndex === 0 ? 1 : 0;
       var index = x - 2010; // Yep, magic number :-/
 
       var gap = $scope.vuRevenueExpenseHistory[1].values[index][1] - $scope.vuRevenueExpenseHistory[0].values[index][1];
@@ -805,9 +817,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 	'<p>(' + int2roundKMG((gap  * 1000000).toString().replace('-', '')) + ' vatu ' + spendingStatus + ')</p>';
     };
 
-    $scope.overspendChartTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.overspendChartTooltips = function(key, x, y) {
 
       var index = x - 2012; // Yep, magic number :-/
       var percentOverspend = parseFloat($scope.vuScholarshipOverspend[1].values[index][1] / $scope.vuScholarshipOverspend[0].values[index][1] * 100).toFixed(2);
@@ -818,46 +828,35 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
     };
 
 
-    $scope.lineChartTooltipsGDP = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.lineChartTooltipsGDP = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% points<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsDebtGDP = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.lineChartTooltipsDebtGDP = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% of GDP<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsEducation = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.lineChartTooltipsEducation = function(key, x, y) {
+      $log.debug('BOO!');
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '%<br />in ' + x + '</p>';
     };
 
-    $scope.areaChartTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.areaChartTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000000).toString()) + ' VATU<br />in ' + x + '</p>';
     };
 
-    $scope.vuSelectedCategoryTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.vuSelectedCategoryTooltips = function(key, x, y) {
       var label = x;
       label = label.replace(/Min\./, 'Ministry of');
       return '<h3>' + label + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /></p>';
     };
 
-    $scope.stackedLineTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.stackedLineTooltips = function(key, x, y, e) {
 
       var label = '';
       var total = 0;
@@ -887,23 +886,17 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.debtRepaymentTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.debtRepaymentTooltips = function(key, x, y) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /> in ' + key + '</p>';
     };
 
-    $scope.pieTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.pieTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG(parseFloat(y.value).toString()) + '<br />VATU</p>';
     };
 
-    $scope.pngDeficitTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.pngDeficitTooltips = function(key, x, y) {
 
       // Handle negatives.
       var minus = y.indexOf('-') === 0 ? '-' : '';
@@ -915,19 +908,17 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.pngBorrowingTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.pngBorrowingTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' KINA<br />in ' + x + '</p>';
     };
-
 
   }]);
 
 
 angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
-  .controller('NPPCtrl', ['$scope', '$location', '$routeParams', 'BudgetFactory', function ($scope, $location, $routeParams, BudgetFactory) {
+
+  .controller('NPPCtrl', ['$scope', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $location, $routeParams, $log, BudgetFactory) {
 
     var rawFromCouch = {}; // Keep the complete data set in frontend
     var rawFromDrill = {}; // Current mashed-up reduced data of interest
@@ -978,26 +969,26 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
     BudgetFactory
       .get(currentDocument)
       .success(function(data, status, headers, config) {
-        $log.debug(data, status, headers, config);
+        $log.debug('Success callback: ', data, status, headers, config);
 	pathMappings = getPathMappings(data);
 	$log.debug('Path mappings: ', pathMappings);
 
 	rawFromCouch = data; 
-	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ',rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
 	// features (chart data, further drill paths,
 	// information box summary data...).
 
-	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
-	$log.debug('Data as processed by drill: ', rawFromDrill);
+	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	$log.debug('Data as processed by drill: ',rawFromDrill);
 	$scope.annualTotal = int2roundKMG(rawFromDrill.data[$scope.currentYear].aggr.toString());
 	process();
 
       })
       .error(function(data, status, headers, config) {
-        $log.error(data, status, headers, config);
+        $log.error('Error callback: ', data, status, headers, config);
       });
 
     var process = function () {
@@ -1017,17 +1008,13 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       }
     };
 
-    $scope.tooltipContent = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.tooltipContent = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y.value) * $scope.currencyMultiplier).toString()) + '<br />' + $scope.budgetCurrency + '</p>' +
 	'<p><em>(Click for full listing)</em></p>';
     };
 
-    $scope.barChartTooltips = function(key, x, y, e, graph) {
-      graph = undefined; // remove here and from function args
-      e = undefined;
+    $scope.barChartTooltips = function(key, x, y) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + '<br />' + $scope.budgetCurrency + '</p>';
     };
@@ -1065,7 +1052,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       BudgetFactory
         .get(currentDocument)
         .success(function(data, status, headers, config) {
-          $log.debug(data, status, headers, config);
+          $log.debug('Success callback: ', data, status, headers, config);
 	  $scope.currentYear    = which.toString();
 	  $scope.currentPalette = palettes[parseFloat($scope.currentYear) - 2012];
 	  pathMappings           = getPathMappings(data);
@@ -1079,7 +1066,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 
 	})
         .error(function(data, status, headers, config) {
-          $log.error(data, status, headers, config);
+          $log.error('Error callback: ', data, status, headers, config);
 	});
 
     };
@@ -1114,7 +1101,8 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	    'startDate':'2014,04,15',
 	    'endDate':'2014,04,26',
 	    'headline':'Budget Policy Statement',
-	    'text':'<p>Budget Policy Statement is submitted to Minister and Director General of Finance and then published.' +
+	    'text':'<p>Budget Policy Statement is submitted to Minister and Director General of Finance and then ' + 
+	      '<a href="http://www.doft.gov.vu/index.php/widgetkit/budget-policy-statements">published</a>.' +
 	      ' <em>The release of this document should give an insight into the government’s key priorities for the coming year.</em></p>',
 	    'tag':'Finance Dept.'
 	  },
@@ -1133,7 +1121,7 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	    'text':'<p>2014 Ministry budget ceilings are approved by the Ministerial Budget Committee and then the Council Of Ministers.' +
 	      ' In practice Vanuatu sees little movement in budget ceilings.</p>' +
 	      '<p>Using the established budget ceilings individual ministries submit their preliminary budget submissions to the ministry of finance ' +
-	      'They also consider whether they wish to bid for <a href="/#/budget/vu/npps/2014">New Policy Proposals</a>' +
+	      'They also consider whether they wish to bid for <a href="/?page_id=574">New Policy Proposals</a>' +
 	      ' - new pots of money to fund ministerial programs and initiatives.</p>',
 	    'tag':'Council of Ministers'
 	  },
@@ -1158,7 +1146,9 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	    'startDate':'2014,07,31',
 	    'endDate':'2014,07,31',
 	    'headline':'HALF YEAR ECONOMIC AND FISCAL UPDATE',
-	    'text':'<p>The department of finance publishes its updated budget position, adjusting the current year\'s budget as necessary in order to ' +
+	    'text':'<p>The department of finance publishes its ' +
+	      '<a href="http://www.doft.gov.vu/index.php/administration-finance-treasury/half-yearly-economic-and-fiscal-report">updated budget position</a>' +
+	      ', adjusting the current year\'s budget as necessary in order to ' +
 	      ' reflect progress during the first six months of the year.' +
 	      ' This is an assessment of the economy and budget is performing over the first half of the year. ' + 
 	      'Essentially, this is a way of making sure things are on track for the current budget.</p>',
@@ -1182,7 +1172,7 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	      'Following the presentation MBC members question them.</p>' +
 	      '<p>The Ministerial Budget Committee then meets to consider the final draft of the budget estimates for 2015.</p>' +
 	      ' <p>While aiming for a fiscally prudent budget (often for a balanced one in Vanuatu\'s case), ' +
-	      ' the MBC begins discussions of those <a href="/#/budget/vu/npps/2014">New Policy Proposals</a> to be undertaken in next year’s budget.</p>',
+	      ' the MBC begins discussions of those <a href="/?page_id=57">New Policy Proposals</a> to be undertaken in next year’s budget.</p>',
 	    'tag':'Council of Ministers'
 	  },
 	  {
@@ -1213,8 +1203,8 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	    'endDate':'2014,10,2',
 	    'headline':'Budget Books Prepared',
 	    'text':'<p>The budget books, which explain in detail the financial plans of the government, are prepared in both French and English. ' +
-	      ' The three volumes include the <a href="/#/budget/vu/2014/at-a-glance">fiscal strategy report</a>, ' +
-	      ' a detailed list of <a href="/#/budget/vu/2014/">budget appropriations/estimates</a>, and the budget narrative.</p>',
+	      ' The three volumes include the <a href="/?page_id=28">fiscal strategy report</a>, ' +
+	      ' a detailed list of <a href="/?page_id=98">budget appropriations/estimates</a>, and the budget narrative.</p>',
 	    'tag':'Finance Dept.'
 	  },
 	  {
@@ -1247,7 +1237,6 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
     };
 
     $scope.newTimeline = function (){
-      $log.debug('Welp, at least it\'s running...');
       createStoryJS({
 	type: 'timeline',
 	embed_id: 'budgetTimeline',

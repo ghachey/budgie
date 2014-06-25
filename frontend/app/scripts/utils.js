@@ -2,15 +2,46 @@
 /* exported  drill, getPieChartData, getBarChartData, convertPieToBarData,
              getFirstProperty, objectToArray, getPathMappings,
              sliceByStringElement, groupOthers, endsWith, contains, truncNb,
-             int2roundKMG, int2roundM */
+             int2roundKMG, int2roundM, getPercentageHistory */
 
 /**
- * @license Put name and version
- * (c) 2013-2014 Nasara Holdings. http://nasara.com
- * License: Put license here.
- */
+ * @license GPLv2
+ * (c) 2013-2014 Nasara Holdings.
+ * License:     This file is part of Budgie.
+
+    Budgie is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    Budgie is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Budgie.  If not, see <http://www.gnu.org/licenses/>.
+
+***** */
 
 'use strict';
+
+/**
+ * @description
+ *
+ * Simple sorting routine for categories. See example below
+ * @param {Object} a Describe me
+ * @param {Object} b Describe me
+ */
+var sortCategories = function (a, b) {
+  if (parseFloat(a['current-data'].aggr) < parseFloat(b['current-data'].aggr)) {
+    return 1;
+  }
+  if (parseFloat(a['current-data'].aggr) === parseFloat(b['current-data'].aggr)) {
+    return 0;
+  }
+  return -1;    
+};
 
 /**
  * @description
@@ -33,44 +64,45 @@
  * @param {String} path String representing the path to the are of
  * interest. For example, 'root.categories.depart-health'
  */
-var drill = function (budget, path, current_year) {
+var drill = function (budget, path, currentYear) {
 
     // Work on a copy of the data to not mutate original.
-    var budget_copy = JSON.parse(JSON.stringify(budget));
+    var budgetCopy = JSON.parse(JSON.stringify(budget));
 
     // Extract budget segment of interest in its raw form. This will
     // contain all raw data from point of interest all the way up the
     // tree.
-    console.debug('PATH: ' + path);
-    var budget_segment = _.deep(budget_copy,path);
+    var budgetSegment = _.deep(budgetCopy, path);
+
+		//console.debug('Budget segment: ', budgetSegment);
 
     // Go through categories of this segment of interest, mash-up data
     // in a convenient way for use in controller: only include name,
     // current data and a boolean drillable flag.
 
-    var raw_categories = budget_segment.categories;
+    var rawCategories = budgetSegment.categories;
     var categories = [];
-    console.log('Raw categories: ', raw_categories);
 
-    for (var category in raw_categories) {
-	// cat is a local variable to hold the newly mashed-up data
-	// for a given category. It will populate the categories
-	// variable above
-	var cat = {}; 
-	cat['name'] = raw_categories[category].name;
-	cat['notes'] = raw_categories[category].notes;
+    for (var category in rawCategories) {
+				// cat is a local variable to hold the newly mashed-up data
+				// for a given category. It will populate the categories
+				// variable above
+				var cat = {}; 
+				cat.name = rawCategories[category].name;
+				cat.notes = rawCategories[category].notes;
+				
+				cat['current-data'] = rawCategories[category].datay[currentYear];
+				cat.level = rawCategories[category].level;
+				if (_.has(rawCategories[category], 'categories')) {
+						cat.drillable = true;
+				} else {
+						cat.drillable = false;
+				}
 
-	cat['current-data'] = raw_categories[category]['data'][current_year];
-	cat['level'] = raw_categories[category].level;
-	if (_.has(raw_categories[category], "categories")) {
-	    cat['drillable'] = true;
-	} else {
-	    cat['drillable'] = false;
-	}
-	categories.push(cat);
+				categories.push(cat);
     }
 
-    categories.sort(sort_categories);
+    categories.sort(sortCategories);
 
     // Replace raw categories with only the necessary information to
     // draw the view. In other words, all data further up the tree
@@ -78,226 +110,143 @@ var drill = function (budget, path, current_year) {
     // categories above will be set instead of the raw categories
     // (which may or may not contain an arbitrary number of data
     // further up the tree)
-
-    return _.deep(budget_segment, 'categories', categories);
+    return _.deep(budgetSegment, 'categories', categories);
 
 };
-
-var sort_categories = function (a,b){
-
-    if (parseFloat(a['current-data']['aggr']) < parseFloat(b['current-data']['aggr'])){
-	return 1;
-    }
-    if (parseFloat(a['current-data']['aggr']) == parseFloat(b['current-data']['aggr'])){
-	return 0;
-    }
-
-    return -1;    
-}
 
 /**
- * Simple usage examples with sample PNG budget.
- **/
+ * @description
+ *
+ * This utility function is to go from pie chart data to a simple one
+ * series bar chart data. It is used mainly to display the 'others'
+ * slice in a pie chart as bar chart.
+ *
+ * Test it with sample data.
 
-var sample_budget = {
-    "_id": "png-2013",
-    "_rev": "1-521793c5646a4f9e4da35e9404717662",
-    "root": {
-        "name": "PNG Budget",
-        "data": {
-            "2013": {
-                "devel": 1000000000,
-                "recur": 1000000000,
-                "aggr": null,
-                "change": 4.2,
-                "notes": "Important points here",
-                "more": "data as needed"
-            },
-            "2012": {
-                "devel": 0,
-                "recur": 1000000000,
-                "aggr": 12300000000,
-                "notes": "Important points here",
-                "more": "data as needed"
-            },
-            "2011": {
-                "recur": 1000000000,
-                "aggr": null,
-                "notes": "Important points here",
-                "more": "data as needed"
-            }
-        },
-        "level": "Departmental Expenditure",
-        "categories": {
-            "depart-health": {
-                "name": "Department for Health",
-                "data": {
-                    "2013": {
-                        "devel": 1000000000,
-                        "recur": 1000000000,
-                        "aggr": null,
-                        "change": 4.2,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    },
-                    "2012": {
-                        "devel": 0,
-                        "recur": 1000000000,
-                        "aggr": 12300000000,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    },
-                    "2011": {
-                        "recur": 1000000000,
-                        "aggr": null,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    }
-                },
-                "level": "Program Expenditure",
-                "categories": {
-                    "progr-curry-eating": {
-                        "name": "Program for Curry Eating",
-                        "data": {
-                            "2013": {
-                                "aggr": 1000000,
-                                "program_type": "recurrent",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            },
-                            "2012": {
-                                "aggr": 1000000,
-                                "program_type": "development",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            },
-                            "2011": {
-                                "aggr": 1000000,
-                                "program_type": "recurrent",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            }
-                        },
-                        "level": "Sub-program Expenditure",
-                        "categories": {
-                            "sub-progr-spicy-curry": {
-                                "name": "Sub-program for Spicy Curry",
-                                "data": {
-                                    "2013": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    },
-                                    "2011": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    }
-                                }
-                            },
-                            "sub-progr-mild-curry": {
-                                "name": "Sub-program for Mild Curry",
-                                "data": {
-                                    "2013": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    },
-                                    "2011": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "depart-edu": {
-                "name": "Department for Education",
-                "data": {
-                    "2013": {
-                        "devel": 1000000000,
-                        "recur": 1000000000,
-                        "aggr": null,
-                        "change": 4.2,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    },
-                    "2012": {
-                        "devel": 0,
-                        "recur": 1000000000,
-                        "aggr": 12300000000,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    },
-                    "2011": {
-                        "recur": 1000000000,
-                        "aggr": null,
-                        "notes": "Important points here",
-                        "more": "data as needed"
-                    }
-                },
-                "level": "Program Expenditure",
-                "categories": {
-                    "progr-arts": {
-                        "name": "Program for Arts",
-                        "data": {
-                            "2013": {
-                                "aggr": 1000000,
-                                "program_type": "recurrent",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            },
-                            "2012": {
-                                "aggr": 1000000,
-                                "program_type": "development",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            },
-                            "2011": {
-                                "aggr": 1000000,
-                                "program_type": "recurrent",
-                                "notes": "Important points here",
-                                "more": "data as needed"
-                            }
-                        },
-                        "level": "Sub-program Expenditure",
-                        "categories": {
-                            "sub-progr-painting": {
-                                "name": "Sub-program for Painting",
-                                "data": {
-                                    "2013": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    },
-                                    "2011": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    }
-                                }
-                            },
-                            "sub-progr-lang": {
-                                "name": "Sub-program for Languages",
-                                "data": {
-                                    "2013": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    },
-                                    "2011": {
-                                        "aggr": 1000000,
-                                        "notes": "Important points here"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+input:
+
+[
+    {
+        'key': 'Department for Education',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Health',
+        'y': 1000000000
     }
+]
+
+output:
+[
+    {
+        'key': 'Others',
+        'values': [ [ 'Department for Education' , 1000000000] , 
+	            [ 'Department for Health' , 1000000000] ]
+    }
+]
+
+ * 
+ * @param {Array} arr Array of pie chart objects
+ * 
+ * @return {Array} barData ready for use in D3 charts.
+ */
+var convertPieToBarData = function(arr) {    
+    var values = _.map(arr, function(item){ return [item.key, item.y]; });
+    return [{'key': 'Other', 'values': values}];
 };
 
-//drill(budget,'root.categories.depart-edu.categories.progr-arts');
-//drill(budget,'root.categories.depart-edu');
-//drill(budget,'root.categories.depart-health.categories.progr-curry-eating');
+/**
+ * @description
+ *
+ * Small utility to group a number of categories together. It is
+ * useful when a pie chart is used but has too many slices to
+ * display. At the moment is takes a fixed constant number of slice
+ * and groups the remaining. Eventually, if a good method is found it
+ * could be implemented by passing in a function as argument. The only
+ * important thing is that the input and output of this function
+ * remains the same and everything else should just work.
+
+input: 
+[
+    {
+        'key': 'Department for Education',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Health',
+        'y': 1000000000
+    },
+    ... (many more groups)
+]
+
+output:
+
+{
+  'top': [
+    {
+        'key': 'Department for Education',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Health',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Justice',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Women',
+        'y': 1000000000
+    },
+    {
+        'key': 'Others',
+        'y': 1000000000
+    }
+  ],
+ 
+  'Other': [
+    {
+        'key': 'Department for Education',
+        'y': 1000000000
+    },
+    {
+        'key': 'Department for Health',
+        'y': 1000000000
+    },
+    ... (many more groups)
+  ]
+
+}
+
+ * 
+ * @param {Array} arr array of group objects
+ * @param {Number} num Number of slices
+ * @return {Object} obj Object containing the top and others separately
+ */
+var groupOthers = function (arr,num) {
+
+    if (arr.length <= num) {
+	return arr;
+    }
+
+    var top = arr.slice(0,num);
+    var others = arr.slice(num,arr.length);
+
+    var othersAggregated = _.reduce(others, 
+				     function(memory,obj) {
+					 return memory + obj.y;},
+				     0);
+
+    top.push({'key': 'Other',
+	      'y': othersAggregated});
+
+    return {
+	'top' : top,
+	'Other' : convertPieToBarData(others)
+    };
+
+};
 
 /**
  * @description
@@ -310,30 +259,30 @@ var sample_budget = {
 input: 
 [
     {
-        "name": "Department for Education",
-        "current-data": {
-            "aggr": null,
-            "change": 4.2,
-            "devel": 1000000000,
-            "more": "data as needed",
-            "notes": "Important points here",
-            "recur": 1000000000
+        'name': 'Department for Education',
+        'current-data': {
+            'aggr': null,
+            'change': 4.2,
+            'devel': 1000000000,
+            'more': 'data as needed',
+            'notes': 'Important points here',
+            'recur': 1000000000
         },
-        "level": "Program Expenditure",
-        "drillable": true
+        'level': 'Program Expenditure',
+        'drillable': true
     },
     {
-        "name": "Department for Health",
-        "current-data": {
-            "aggr": null,
-            "change": 4.2,
-            "devel": 1000000000,
-            "more": "data as needed",
-            "notes": "Important points here",
-            "recur": 1000000000
+        'name': 'Department for Health',
+        'current-data': {
+            'aggr': null,
+            'change': 4.2,
+            'devel': 1000000000,
+            'more': 'data as needed',
+            'notes': 'Important points here',
+            'recur': 1000000000
         },
-        "level": "Program Expenditure",
-        "drillable": true
+        'level': 'Program Expenditure',
+        'drillable': true
     }
 ]
 
@@ -341,12 +290,12 @@ output:
 
 [
     {
-        "key": "Department for Education",
-        "y": 1000000000
+        'key': 'Department for Education',
+        'y': 1000000000
     },
     {
-        "key": "Department for Health",
-        "y": 1000000000
+        'key': 'Department for Health',
+        'y': 1000000000
     }
 ]
 
@@ -361,145 +310,93 @@ var getPieChartData = function(categories) {
 
     // Just using 'aggr' for now...
     for(var i=0; i<categories.length; i++) {
-	var aggr = categories[i]['current-data'].aggr;
-	if (aggr) { // Only push data if there is some
-	    pieData.push(
-		{key: categories[i].name, 
-		 y: parseFloat(aggr) // Still receiving string; GRRRRRRR...
-		}
-	    );
-	}
+				var aggr = categories[i]['current-data'].aggr;
+				if (aggr) { // Only push data if there is some
+						pieData.push(
+								{
+										key: categories[i].name, 
+										y: parseFloat(aggr) 
+								}
+						);
+				}
     }
     
     return groupOthers(pieData,16); // will only group if needed
   
-}
+};
 
 /**
  * @description
  *
- * This utility function is used to mash-up data from model into D3
- * bar chart ready data. At the moment is only prepares bar chart data
- * using the aggregate costs but this can later be refined to do what we
- * want.
- * 
- * Test it with sample data.
+ * Small utility to return an object turned into an array of
+ * objects. This is only a convenience function to produce bar charts
+ * data. For example,
 
-input: 
-{
-    "2013": {
-        "aggr": 1000000,
-        "program_type": "recurrent",
-        "notes": "Important points here",
-        "more": "data as needed"
+[input]
+var sample_data = {
+    '2013': {
+        'aggr': 1000000,
+        'program_type': 'recurrent',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     },
-    "2012": {
-        "aggr": 1200000,
-        "program_type": "development",
-        "notes": "Important points here",
-        "more": "data as needed"
+    '2012': {
+        'aggr': 1000000,
+        'program_type': 'development',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     },
-    "2011": {
-        "aggr": 1300000,
-        "program_type": "recurrent",
-        "notes": "Important points here",
-        "more": "data as needed"
+    '2011': {
+        'aggr': 1000000,
+        'program_type': 'recurrent',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     }
 }
 
-output:
+[output]
 [
-    {
-        "key": "Costs",
-        "values": [ [ "2013" , 1000000] , 
-	            [ "2012" , 1200000] , 
-		    [ "2011" , 1300000] ]
+  {
+    '2013': {
+      'aggr': 1000000,
+      'program_type': 'recurrent',
+      'notes': 'Important points here',
+      'more': 'data as needed'
     }
+  },
+  {
+    '2012': {
+      'aggr': 1000000,
+      'program_type': 'development',
+      'notes': 'Important points here',
+      'more': 'data as needed'
+    }
+  },
+  {
+    '2011': {
+      'aggr': 1000000,
+      'program_type': 'recurrent',
+      'notes': 'Important points here',
+      'more': 'data as needed'
+    }
+  }
 ]
 
- * @param {Array} data Array containing the last three years worth of
- * data for a given Department, Program, Sub-program...
  * 
- * @return {Array} barData ready for use in D3 charts.
+ * @param {Object} obj Object to iterate
+ * @return {String} prop String property name
  */
-var getBarChartData = function(data) {
-
-    // First turn the object into array so it can easily be reduced to
-    // a form convenient for D3 charts.
-    var data_as_array = objectToArray(data);
-
-    var barValues = [];
-    var barData = [
-	{
-            "key": "Expenditure",
-            "values": barValues
+var objectToArray = function (obj) {
+    var objAsArray = [];
+    for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) { // skip inherited properties
+	    var newObj = {};
+	    newObj[prop] = obj[prop];
+	    objAsArray.push(newObj);
 	}
-    ];
-
-    /**
-     * Reduce function that consolidates new bar chart data from the next 
-     * object (i.e. next year)
-     * 
-     * Eventually will have to check for the existance of cost figures 
-     * before trying to get values and pushing them to the set.
-     */
-    var reduceFunction = function(memory, object) {
-	var prop = getFirstProperty(object); // the year
-	var cost = parseInt(object[prop]['aggr']); //* $scope.currency_multiplier; // the cost figure
-
-	barValues = memory[0]['values'].push([prop,cost]);
-	
-	return 	barData;
     }
-
-    // Not the most purest use of reduce with some imperative stuff
-    // mixed in, but working for now
-    return _.reduce(data_as_array, reduceFunction, barData);
-
-}
-
-/**
- * @description
- *
- * This utility function is to go from pie chart data to a simple one
- * series bar chart data. It is used mainly to display the "others"
- * slice in a pie chart as bar chart.
- *
- * Test it with sample data.
-
-input:
-
-[
-    {
-        "key": "Department for Education",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Health",
-        "y": 1000000000
-    }
-]
-
-output:
-[
-    {
-        "key": "Others",
-        "values": [ [ "Department for Education" , 1000000000] , 
-	            [ "Department for Health" , 1000000000] ]
-    }
-]
-
- * 
- * @param {Array} arr Array of pie chart objects
- * 
- * @return {Array} barData ready for use in D3 charts.
- */
-var convertPieToBarData = function(arr) {    
-    var values = _.map(arr,function(item){return [item['key'], item['y']];});
-    
-    return [{"key": "Other", "values": values}];
-    
-}
+    return objAsArray;
+};
 
 /**
  * @description
@@ -515,81 +412,126 @@ var getFirstProperty = function (obj) {
 	    return prop;
 	}
     }
-}
+};
 
 /**
  * @description
  *
- * Small utility to return an object turned into an array of
- * objects. This is only a convenience function to produce bar charts
- * data. For example,
+ * This utility function is used to mash-up data from model into D3
+ * bar chart ready data. At the moment is only prepares bar chart data
+ * using the aggregate costs but this can later be refined to do what we
+ * want.
+ * 
+ * Test it with sample data.
 
-[input]
-var sample_data = {
-    "2013": {
-        "aggr": 1000000,
-        "program_type": "recurrent",
-        "notes": "Important points here",
-        "more": "data as needed"
+input: 
+{
+    '2013': {
+        'aggr': 1000000,
+        'program_type': 'recurrent',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     },
-    "2012": {
-        "aggr": 1000000,
-        "program_type": "development",
-        "notes": "Important points here",
-        "more": "data as needed"
+    '2012': {
+        'aggr': 1200000,
+        'program_type': 'development',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     },
-    "2011": {
-        "aggr": 1000000,
-        "program_type": "recurrent",
-        "notes": "Important points here",
-        "more": "data as needed"
+    '2011': {
+        'aggr': 1300000,
+        'program_type': 'recurrent',
+        'notes': 'Important points here',
+        'more': 'data as needed'
     }
 }
 
-[output]
+output:
 [
-  {
-    "2013": {
-      "aggr": 1000000,
-      "program_type": "recurrent",
-      "notes": "Important points here",
-      "more": "data as needed"
+    {
+        'key': 'Costs',
+        'values': [ [ '2013' , 1000000] , 
+	            [ '2012' , 1200000] , 
+		    [ '2011' , 1300000] ]
     }
-  },
-  {
-    "2012": {
-      "aggr": 1000000,
-      "program_type": "development",
-      "notes": "Important points here",
-      "more": "data as needed"
-    }
-  },
-  {
-    "2011": {
-      "aggr": 1000000,
-      "program_type": "recurrent",
-      "notes": "Important points here",
-      "more": "data as needed"
-    }
-  }
 ]
 
+ * @param {Array} data Array containing the last three years worth of
+ * data for a given Department, Program, Sub-program...
  * 
- * @param {Object} obj Object to iterate
- * @return {String} prop String property name
+ * @return {Array} barData ready for use in D3 charts.
  */
-var objectToArray = function (obj) {
-    var obj_as_array = [];
-    for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) { // skip inherited properties
-	    var new_obj = {};
-	    new_obj[prop] = obj[prop];
-	    obj_as_array.push(new_obj);
-	}
-    }
-    return obj_as_array;
-}
+var getBarChartData = function(data) {
 
+    // First turn the object into array so it can easily be reduced to
+    // a form convenient for D3 charts.
+    var dataAsArray = objectToArray(data);
+
+    var barValues = [];
+    var barData = [
+				{
+            'key': 'Expenditure',
+            'values': barValues
+				}
+    ];
+
+    /**
+     * Reduce function that consolidates new bar chart data from the next 
+     * object (i.e. next year)
+     * 
+     * Eventually will have to check for the existance of cost figures 
+     * before trying to get values and pushing them to the set.
+     */
+    var reduceFunction = function(memory, object) {
+				var prop = getFirstProperty(object); // the year
+				var cost = parseInt(object[prop].aggr); //* $scope.currency_multiplier; // the cost figure
+				
+				barValues = memory[0].values.push([prop,cost]);
+				
+				return 	barData;
+    };
+
+    // Not the most purest use of reduce with some imperative stuff
+    // mixed in, but working for now
+    return _.reduce(dataAsArray, reduceFunction, barData);
+
+};
+
+var getPercentageHistory = function (data){
+
+    // First turn the object into array so it can easily be reduced to
+    // a form convenient for D3 charts.
+    var dataAsArray = objectToArray(data);
+
+    var barValues = [];
+    var barData = [
+				{
+            'key': 'Percentage',
+            'values': barValues
+				}
+    ];
+
+    /**
+     * Reduce function that consolidates new bar chart data from the next 
+     * object (i.e. next year)
+     * 
+     * Eventually will have to check for the existance of cost figures 
+     * before trying to get values and pushing them to the set.
+     */
+    var reduceFunction = function(memory, object) {
+				var prop = getFirstProperty(object); // the year
+				var cost = parseInt(object[prop].percentage);
+				
+				barValues = memory[0].values.push([prop,cost]);
+				
+				return 	barData;
+    };
+
+    // Not the most purest use of reduce with some imperative stuff
+    // mixed in, but working for now
+    return _.reduce(dataAsArray, reduceFunction, barData);
+
+};
 
 /**
  * @description
@@ -611,8 +553,8 @@ var getPathMappings = function (budget) {
             if(obj.hasOwnProperty(key)){
 		value = obj[key];
 		ikey = current ? current + '.' + key : key;
-		if(typeof value == 'object'){
-                    process(value, mapping, ikey) // recurse deeper
+		if(typeof value === 'object'){
+                    process(value, mapping, ikey); // recurse deeper
 		} else {
 		    // All paths in the tree are processed, the ones
 		    // ending with .names are the paths of interest
@@ -629,23 +571,7 @@ var getPathMappings = function (budget) {
 
     return mapping;
 
-}
-
-/**
- * Cloning technique describe at <oranlooney.com/functional-javascript>.
- * 
- * Note that assigning a new value to a property of the clone won't
- * interfere with the original, but assigning values to the clone's
- * object properties will.
- *
- * A shallow copy was chosen instead of this cloning approach, but
- * keeping it here anyway; it might prove useful.
- */
-var clone = (function() { 
-    return function (obj) { Clone.prototype=obj; return new Clone() };
-    function Clone(){}
-}());
-
+};
 
 /**
  * @description
@@ -658,255 +584,162 @@ var clone = (function() {
  * @param {String} end String to end slice
  * @return {Array} arr Array sliced
  */
-var sliceByStringElement = function (arr,end,start) {
+var sliceByStringElement = function (arr, end, start) {
 
-    var start = (typeof start === "undefined") ? arr[0] : start;
-    var new_arr = [];
+  start = start === undefined ? arr[0] : start;
+  var newArr = [];
 
-    if (!_.contains(arr,start) || !_.contains(arr,end)) {
-	throw "Element not present in array"
-    }
-
-    for(var i=0; i<arr.length; i++) {
-        if (arr[i] === start) {
-	    for (var j=i; j<arr.length; j++) {
-		if (arr[j] === end) {
-		    new_arr.push(arr[j]);
-		    break;
-		}
-		new_arr.push(arr[j]);
-	    }
-        }
-    }
-
-    return new_arr;
-
-}
-
-
-/**
- * @description
- *
- * Small utility to group a number of categories together. It is
- * useful when a pie chart is used but has too many slices to
- * display. At the moment is takes a fixed constant number of slice
- * and groups the remaining. Eventually, if a good method is found it
- * could be implemented by passing in a function as argument. The only
- * important thing is that the input and output of this function
- * remains the same and everything else should just work.
-
-input: 
-[
-    {
-        "key": "Department for Education",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Health",
-        "y": 1000000000
-    },
-    ... (many more groups)
-]
-
-output:
-
-{
-  "top": [
-    {
-        "key": "Department for Education",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Health",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Justice",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Women",
-        "y": 1000000000
-    },
-    {
-        "key": "Others",
-        "y": 1000000000
-    }
-  ],
- 
-  "Other": [
-    {
-        "key": "Department for Education",
-        "y": 1000000000
-    },
-    {
-        "key": "Department for Health",
-        "y": 1000000000
-    },
-    ... (many more groups)
-  ]
-
-}
-
- * 
- * @param {Array} arr array of group objects
- * @param {Number} num Number of slices
- * @return {Object} obj Object containing the top and others separately
- */
-var groupOthers = function (arr,num) {
-
-    if (arr.length <= num) {
-	return arr;
-    }
-
-    var top = arr.slice(0,num);
-    var others = arr.slice(num,arr.length);
-
-    var others_aggregated = _.reduce(others, 
-				     function(memory,obj) {
-					 return memory + obj['y'];},
-				     0);
-
-    top.push({"key": "Other",
-	      "y": others_aggregated});
-
-    return {
-	"top" : top,
-	"Other" : convertPieToBarData(others)
-    };
-
-}
-
-var sample_pie_slices = [
-  {
-    "key": "Treasury and Finance Misc",
-    "y": 1130200
-  },
-  {
-    "key": "Public Debt Charges",
-    "y": 751300
-  },
-  {
-    "key": "Department of National Planning and Monitoring",
-    "y": 516712.9
-  },
-  {
-    "key": "Department of Treasury",
-    "y": 220498.5
-  },
-  {
-    "key": "Department of Prime Minister & NEC",
-    "y": 189336.2
-  },
-  {
-    "key": "Department of Personnel Management",
-    "y": 169657.8
-  },
-  {
-    "key": "National Parliament",
-    "y": 130724.6
-  },
-  {
-    "key": "Department of Foreign Affairs and Trade",
-    "y": 127110.1
-  },
-  {
-    "key": "Internal Revenue Commission",
-    "y": 76235
-  },
-  {
-    "key": "Department for Local and Provincial Affairs",
-    "y": 74723.7
-  },
-  {
-    "key": "PNG Customs Service",
-    "y": 63498.2
-  },
-  {
-    "key": "Department of Finance",
-    "y": 52326.2
-  },
-  {
-    "key": "Provincial Treasuries",
-    "y": 40059.1
-  },
-  {
-    "key": "Electoral Commission",
-    "y": 36981.2
-  },
-  {
-    "key": "Department of Industrial Relations",
-    "y": 27093.3
-  },
-  {
-    "key": "PNG Fire Services",
-    "y": 22616.4
-  },
-  {
-    "key": "Information Technology Division",
-    "y": 19778.8
-  },
-  {
-    "key": "Ombudsman Commission",
-    "y": 18115
-  },
-  {
-    "key": "Office of the Auditor-General",
-    "y": 18001
-  },
-  {
-    "key": "PNG Immigration and Citizenship Services",
-    "y": 8665.5
-  },
-  {
-    "key": "Registrar For Politcal Parties",
-    "y": 7472.3
-  },
-  {
-    "key": "PNG Institute of Public Administration",
-    "y": 6819.1
-  },
-  {
-    "key": "Public Service Commission",
-    "y": 6188.8
-  },
-  {
-    "key": "National Statistical Office ",
-    "y": 6008.1
-  },
-  {
-    "key": "Papua New Guinea Accidents Investigation Commission",
-    "y": 5566
-  },
-  {
-    "key": "Office of Governor-General",
-    "y": 4706.5
-  },
-  {
-    "key": "National Intelligence Organisation",
-    "y": 4372.5
-  },
-  {
-    "key": "Office of Bougainville Affairs",
-    "y": 3293.7
-  },
-  {
-    "key": "National Training Council",
-    "y": 3125
-  },
-  {
-    "key": "National Economic & Fiscal Commission",
-    "y": 2920
-  },
-  {
-    "key": "Central Supply & Tenders Board",
-    "y": 2636.9
-  },
-  {
-    "key": "National Tripartite Consultative Council",
-    "y": 850.4
+  if (!_.contains(arr, start) || !_.contains(arr, end)) {
+    throw 'Element not present in array';
   }
-];
+
+  for(var i=0; i<arr.length; i++) {
+    if (arr[i] === start) {
+      for (var j=i; j<arr.length; j++) {
+	if (arr[j] === end) {
+	  newArr.push(arr[j]);
+	  break;
+	}
+	newArr.push(arr[j]);
+      }
+    }
+  }
+
+  return newArr;
+
+};
+
+// Push this data to unit tests
+// var samplePieSlices = [
+//   {
+//     'key': 'Treasury and Finance Misc',
+//     'y': 1130200
+//   },
+//   {
+//     'key': 'Public Debt Charges',
+//     'y': 751300
+//   },
+//   {
+//     'key': 'Department of National Planning and Monitoring',
+//     'y': 516712.9
+//   },
+//   {
+//     'key': 'Department of Treasury',
+//     'y': 220498.5
+//   },
+//   {
+//     'key': 'Department of Prime Minister & NEC',
+//     'y': 189336.2
+//   },
+//   {
+//     'key': 'Department of Personnel Management',
+//     'y': 169657.8
+//   },
+//   {
+//     'key': 'National Parliament',
+//     'y': 130724.6
+//   },
+//   {
+//     'key': 'Department of Foreign Affairs and Trade',
+//     'y': 127110.1
+//   },
+//   {
+//     'key': 'Internal Revenue Commission',
+//     'y': 76235
+//   },
+//   {
+//     'key': 'Department for Local and Provincial Affairs',
+//     'y': 74723.7
+//   },
+//   {
+//     'key': 'PNG Customs Service',
+//     'y': 63498.2
+//   },
+//   {
+//     'key': 'Department of Finance',
+//     'y': 52326.2
+//   },
+//   {
+//     'key': 'Provincial Treasuries',
+//     'y': 40059.1
+//   },
+//   {
+//     'key': 'Electoral Commission',
+//     'y': 36981.2
+//   },
+//   {
+//     'key': 'Department of Industrial Relations',
+//     'y': 27093.3
+//   },
+//   {
+//     'key': 'PNG Fire Services',
+//     'y': 22616.4
+//   },
+//   {
+//     'key': 'Information Technology Division',
+//     'y': 19778.8
+//   },
+//   {
+//     'key': 'Ombudsman Commission',
+//     'y': 18115
+//   },
+//   {
+//     'key': 'Office of the Auditor-General',
+//     'y': 18001
+//   },
+//   {
+//     'key': 'PNG Immigration and Citizenship Services',
+//     'y': 8665.5
+//   },
+//   {
+//     'key': 'Registrar For Politcal Parties',
+//     'y': 7472.3
+//   },
+//   {
+//     'key': 'PNG Institute of Public Administration',
+//     'y': 6819.1
+//   },
+//   {
+//     'key': 'Public Service Commission',
+//     'y': 6188.8
+//   },
+//   {
+//     'key': 'National Statistical Office ',
+//     'y': 6008.1
+//   },
+//   {
+//     'key': 'Papua New Guinea Accidents Investigation Commission',
+//     'y': 5566
+//   },
+//   {
+//     'key': 'Office of Governor-General',
+//     'y': 4706.5
+//   },
+//   {
+//     'key': 'National Intelligence Organisation',
+//     'y': 4372.5
+//   },
+//   {
+//     'key': 'Office of Bougainville Affairs',
+//     'y': 3293.7
+//   },
+//   {
+//     'key': 'National Training Council',
+//     'y': 3125
+//   },
+//   {
+//     'key': 'National Economic & Fiscal Commission',
+//     'y': 2920
+//   },
+//   {
+//     'key': 'Central Supply & Tenders Board',
+//     'y': 2636.9
+//   },
+//   {
+//     'key': 'National Tripartite Consultative Council',
+//     'y': 850.4
+//   }
+// ];
 
 // Normally shouldn't modify base objects I don't own. But fuck it,
 // whoever works on this code base will have to pay attention so I can
@@ -916,14 +749,14 @@ var sample_pie_slices = [
  * Modify the prototype to add builtin endsWith method
  */
 String.prototype.endsWith = function (s) {
-    return this.length >= s.length && this.substr(this.length - s.length) == s;
+    return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
 /**
  * Modify the prototype to add builtin contains method
  */
 String.prototype.contains = function(s) {
-    return this.indexOf(s) != -1;
+  return this.indexOf(s) !== -1;
 };
 
 /** 
@@ -939,10 +772,10 @@ var truncNb = function(Nb, ind) {
 // convert a big number to '$num Billion/Million/Thousand'
 var int2roundKMG = function(val) {
     
-    var _str = "";
+    var _str = '';
 
-    var all_commas = /,/g;
-    val = val.replace(all_commas,"");
+    var allCommas = /,/g;
+    val = val.replace(allCommas,'');
     val = val.replace (/\.*/,'');
 
     if (val >= 1e9)        { 
@@ -960,13 +793,8 @@ var int2roundKMG = function(val) {
 
 // Convert numbers into x.xx Millions
 var int2roundM = function(val) {
-    
-    var _str = "";
-
     val = val.replace (/\,/g,'');
     val = val.replace (/\.0/,'');
-
     return truncNb((val/1e6), 2);
- 
 };
 
