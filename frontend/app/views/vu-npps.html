@@ -32,7 +32,7 @@
 		</div>
 		<div class="row">
 			<div class="span12">
-				<h3>New Policy Proposals - {{current_year}}</h3>
+				<h3>New Policy Proposals - {{currentYear}}</h3>
 				<div class="choose-your-poison">
 					<div class="btn-group">
 						<button type="button" btn-radio="'2012'"  ng-model="radioModel" class="btn" ng-click="recordSelect('2012')">2012</button>
@@ -72,7 +72,7 @@
 			<div class="span4" style="background-color: #eee; margin: 0.5em;
 					 border: 1px dotted #dfdfdf; min-height: 400px">
 				<p class="yearly-aggregate fade-in">Total new spending approved for
-					{{current_year}}: <span style="color:#000;">{{annual_total}} VATU</span></p>
+					{{currentYear}}: <span style="color:#000;">{{annualTotal}} VATU</span></p>
 				<h3 class="fade-in" style="text-align:center; font-size:9pt;line-height:1em;padding:1em;padding-top:0.25em;margin-top:0;">{{name.indexOf('Vanuatu') != 0 ? name : ''}}</h3>
 				<ul class="npp-list nav nav-pills nav-stacked" style="list-style-type:none;" ng-repeat="npp in vuNPPs | orderBy:npp.y:reverse">
 					<li class="npp-list-item"><strong>{{npp.key}}:</strong><br /> {{int2roundKMG(npp.y)}} VATU</li> 

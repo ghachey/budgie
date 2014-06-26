@@ -4,7 +4,6 @@
 var pippDataApp = angular.module('pippDataApp',
                                  ['pippDataApp.services.resources',
 				  'pippDataApp.directives.budgetTimeline',
-                                  'candybasket.directives.budgetTimeline',
 				  'pippDataApp.controllers.main',
 				  'pippDataApp.controllers.budgets',
 				  'pippDataApp.controllers.one-off-charts',

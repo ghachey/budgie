@@ -179,7 +179,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
     };
 
-    $scope.tooltipContent = function(key, x, y) {
+    $scope.tooltipContent = function(key, x, y, e, graph) {
 
       var notes = '';
       if (typeof($scope.notes) !== 'undefined'){
@@ -220,7 +220,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       $log.debug('stateChange.directive', event);
     });
 
-    $scope.$on('elementClick.directive', function(event,data){
+    $scope.$on('elementClick.directive', function(event, data){
       
       $scope.showOthers = false;
 
@@ -235,12 +235,12 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	  $scope.breadcrumbs.push(data.label);
 	}
 	path = pathMappings[data.label];
-	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
       }	    
       $scope.nextPalette();
       
       process();
-
+      $scope.$apply();
     });
 
     $scope.radioModel =  'spending';
@@ -328,7 +328,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     };
 
 
-    $scope.percentageHistoryTooltips = function(key, x, y) {
+    $scope.percentageHistoryTooltips = function(key, x, y, e, graph) {
       return '<h3>' + $scope.name + '</h3>' +
 	'<p>' + y + '% of Overall ' + $scope.historyLabel + ' Spending<br />' + 
 	'in ' + x + '</p>';
@@ -802,7 +802,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
      */
 
-    $scope.lineChartTooltips = function(key, x, y) {
+    $scope.lineChartTooltips = function(key, x, y, e, graph) {
 
       // otherIndex never used, dead code?
       //var otherIndex = e.seriesIndex === 0 ? 1 : 0;
@@ -817,7 +817,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 	'<p>(' + int2roundKMG((gap  * 1000000).toString().replace('-', '')) + ' vatu ' + spendingStatus + ')</p>';
     };
 
-    $scope.overspendChartTooltips = function(key, x, y) {
+    $scope.overspendChartTooltips = function(key, x, y, e, graph) {
 
       var index = x - 2012; // Yep, magic number :-/
       var percentOverspend = parseFloat($scope.vuScholarshipOverspend[1].values[index][1] / $scope.vuScholarshipOverspend[0].values[index][1] * 100).toFixed(2);
@@ -828,35 +828,35 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
     };
 
 
-    $scope.lineChartTooltipsGDP = function(key, x, y) {
+    $scope.lineChartTooltipsGDP = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% points<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsDebtGDP = function(key, x, y) {
+    $scope.lineChartTooltipsDebtGDP = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% of GDP<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsEducation = function(key, x, y) {
+    $scope.lineChartTooltipsEducation = function(key, x, y, e, graph) {
       $log.debug('BOO!');
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '%<br />in ' + x + '</p>';
     };
 
-    $scope.areaChartTooltips = function(key, x, y) {
+    $scope.areaChartTooltips = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000000).toString()) + ' VATU<br />in ' + x + '</p>';
     };
 
-    $scope.vuSelectedCategoryTooltips = function(key, x, y) {
+    $scope.vuSelectedCategoryTooltips = function(key, x, y, e, graph) {
       var label = x;
       label = label.replace(/Min\./, 'Ministry of');
       return '<h3>' + label + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /></p>';
     };
 
-    $scope.stackedLineTooltips = function(key, x, y, e) {
+    $scope.stackedLineTooltips = function(key, x, y, e, graph) {
 
       var label = '';
       var total = 0;
@@ -886,17 +886,17 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.debtRepaymentTooltips = function(key, x, y) {
+    $scope.debtRepaymentTooltips = function(key, x, y, e, graph) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /> in ' + key + '</p>';
     };
 
-    $scope.pieTooltips = function(key, x, y) {
+    $scope.pieTooltips = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG(parseFloat(y.value).toString()) + '<br />VATU</p>';
     };
 
-    $scope.pngDeficitTooltips = function(key, x, y) {
+    $scope.pngDeficitTooltips = function(key, x, y, e, graph) {
 
       // Handle negatives.
       var minus = y.indexOf('-') === 0 ? '-' : '';
@@ -908,7 +908,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.pngBorrowingTooltips = function(key, x, y) {
+    $scope.pngBorrowingTooltips = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' KINA<br />in ' + x + '</p>';
     };
@@ -1008,13 +1008,13 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       }
     };
 
-    $scope.tooltipContent = function(key, x, y) {
+    $scope.tooltipContent = function(key, x, y, e, graph) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y.value) * $scope.currencyMultiplier).toString()) + '<br />' + $scope.budgetCurrency + '</p>' +
 	'<p><em>(Click for full listing)</em></p>';
     };
 
-    $scope.barChartTooltips = function(key, x, y) {
+    $scope.barChartTooltips = function(key, x, y, e, graph) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + '<br />' + $scope.budgetCurrency + '</p>';
     };

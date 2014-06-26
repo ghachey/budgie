@@ -1,7 +1,7 @@
-<div ng-init="currentDocument='png-2014';country_name='Papua New Guinea';">
+<div ng-init="currentDocument='png-2014';countryName='Papua New Guinea';">
 <div ng-controller="BudgetCtrl">
 <div class="row">
-    <h3>Discover how the government of {{country_name}} spends its money</h3>
+    <h3>Discover how the government of {{countryName}} spends its money</h3>
     <p class="intro">This spending wheel provides a detailed, drill-down view of
     annual spending. Hover over any of the individual pie slices, and
     you will see the name and amount of money allocated to a
@@ -31,11 +31,14 @@
        data="stackedBarChartData"
        id="stackedBarChart"
        tooltips="true"
-       tooltipContent="barChartTooltips"
+       tooltipContent="barChartTooltips()"
        color="colorFunction()"
        yAxisTickFormat="formatBarChartTicks()"
+       showXAxis="true"
+       showYAxis="true"
+       interactive="true"
        margin="{top: 30, right: 0, bottom: 20, left:150}">
-        <svg style="height: 400px;width=100px;"></svg>
+       <svg height:"400" width="100"></svg>
     </nvd3-multi-bar-chart>
 
   </div>
@@ -44,24 +47,25 @@
        data="pieChartData"
        noData=""
        id="pieChartBudget"
+       width="500"
+       height="500" 
        showLabels="false"
        showValues="true"
        labelType="percent"
        tooltips="true"
-       tooltipContent="tooltipContent"
+       tooltipContent="tooltipContent()"
        transitionDuration="1200"
        x="xFunction()"
        y="yFunction()"
-       width="500"
-       height="500"
        donut="true"
        donutRatio="1.5"
        donutLabelsOutside="false"
        showLegend="false"
        color="colorFunction()"
+       interactive="true"
        margin="{left:100,top:50,bottom:50,right:20}">
 
-      <svg style="width:500px;"></svg>
+      <svg width:"500"></svg>
     </nvd3-pie-chart>  
   </div>
 </div>
@@ -71,15 +75,16 @@
     <nvd3-multi-bar-horizontal-chart
        data="othersBarChartData"
        id="othersBarChart"
-       tooltips="true"
+       interactive="true"
        color="colorFunction()"
-       tooltipContent="barChartTooltips"
+       tooltips="true"
+       tooltipContent="barChartTooltips()"
        height="400"
        margin="{left:250,top:50,bottom:50,right:100}">
        <svg></svg>
     </nvd3-multi-bar-chart>
   </div>
-
+  
 </div>
 <div class="row">
     <hr />

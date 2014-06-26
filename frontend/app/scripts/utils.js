@@ -91,7 +91,7 @@ var drill = function (budget, path, currentYear) {
 				cat.name = rawCategories[category].name;
 				cat.notes = rawCategories[category].notes;
 				
-				cat['current-data'] = rawCategories[category].datay[currentYear];
+				cat['current-data'] = rawCategories[category].data[currentYear];
 				cat.level = rawCategories[category].level;
 				if (_.has(rawCategories[category], 'categories')) {
 						cat.drillable = true;
@@ -484,7 +484,7 @@ var getBarChartData = function(data) {
      */
     var reduceFunction = function(memory, object) {
 				var prop = getFirstProperty(object); // the year
-				var cost = parseInt(object[prop].aggr); //* $scope.currency_multiplier; // the cost figure
+				var cost = parseInt(object[prop].aggr); //* $scope.currencyMultiplier; // the cost figure
 				
 				barValues = memory[0].values.push([prop,cost]);
 				
