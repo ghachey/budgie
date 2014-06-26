@@ -24,10 +24,10 @@ module.exports = function(config) {
       'bower_components/angular-route/angular-route.js',
       'bower_components/angular-sanitize/angular-sanitize.js',
       'bower_components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js',
+//      'bower_components/TimelineJS/build/js/timeline.js', // this fails
+      'bower_components/angular-timelinejs/build/angular-timelinejs.js',
       'bower_components/angular-bootstrap/ui-bootstrap.min.js',
       'bower_components/underscore/underscore.js',
-      'bower_components/TimelineJS/build/js/storyjs-embed.js',
-      'app/scripts/directives/budget-timeline.js',
       'app/scripts/**/*.js',
       'test/mock/**/*.js',
       'test/spec/**/*.js'

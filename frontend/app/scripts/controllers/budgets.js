@@ -1086,9 +1086,6 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAnimate'])
 
   .controller('budgetTimeline', ['$scope', function ($scope) {
-
-    $scope.width  = '100%';
-    $scope.height = '600';
     
     $scope.timelineData = {
       'timeline':
@@ -1235,18 +1232,5 @@ angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAn
 	
       }
     };
-
-    $scope.newTimeline = function (){
-      createStoryJS({
-	type: 'timeline',
-	embed_id: 'budgetTimeline',
-	width: $scope.width,
-	height: $scope.height,
-	source: $scope.timelineData,
-	font: 'Helvetica'
-      });
-    };
-    
-    $scope.newTimeline();
 
   }]);

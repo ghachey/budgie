@@ -1,6 +1,11 @@
-
 <div class="row" ngController="budgetTimeline">
-     <!-- BEGIN Timeline Embed -->
-  <div id="budgetTimeline"></div>
-  <budgetTimeline sourceData="timelineData"></budgetTimeline>
+  <pipp-timeline-j-s source="timelineData"
+  height="600"
+  width="90%"
+  start-zoom-adjust="0"
+  start-at-end="false"
+  start-at-slide="0"
+  hash-bookmark="false"
+  lang="en"
+  debug="false"></pipp-timeline-j-s>
 </div>
