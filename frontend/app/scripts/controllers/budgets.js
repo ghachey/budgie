@@ -132,7 +132,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
     var process = function () {
       
-      $log.debug('Processing data for display...', options);
+      $log.debug('Processing data for display...');
 
       // Pie chart side
       $scope.name = rawFromDrill.name;
