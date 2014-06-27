@@ -1,28 +1,28 @@
 /* global _ */
 /* exported  drill, getPieChartData, getBarChartData, convertPieToBarData,
-             getFirstProperty, objectToArray, getPathMappings,
-             sliceByStringElement, groupOthers, endsWith, contains, truncNb,
-             int2roundKMG, int2roundM, getPercentageHistory */
+ getFirstProperty, objectToArray, getPathMappings,
+ sliceByStringElement, groupOthers, endsWith, contains, truncNb,
+ int2roundKMG, int2roundM, getPercentageHistory */
 
 /**
  * @license GPLv2
  * (c) 2013-2014 Nasara Holdings.
  * License:     This file is part of Budgie.
 
-    Budgie is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+ Budgie is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
 
-    Budgie is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+ Budgie is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Budgie.  If not, see <http://www.gnu.org/licenses/>.
+ You should have received a copy of the GNU General Public License
+ along with Budgie.  If not, see <http://www.gnu.org/licenses/>.
 
-***** */
+ ***** */
 
 'use strict';
 
@@ -66,51 +66,51 @@ var sortCategories = function (a, b) {
  */
 var drill = function (budget, path, currentYear) {
 
-    // Work on a copy of the data to not mutate original.
-    var budgetCopy = JSON.parse(JSON.stringify(budget));
+  // Work on a copy of the data to not mutate original.
+  var budgetCopy = JSON.parse(JSON.stringify(budget));
 
-    // Extract budget segment of interest in its raw form. This will
-    // contain all raw data from point of interest all the way up the
-    // tree.
-    var budgetSegment = _.deep(budgetCopy, path);
+  // Extract budget segment of interest in its raw form. This will
+  // contain all raw data from point of interest all the way up the
+  // tree.
+  var budgetSegment = _.deep(budgetCopy, path);
 
-		//console.debug('Budget segment: ', budgetSegment);
+  //console.debug('Budget segment: ', budgetSegment);
 
-    // Go through categories of this segment of interest, mash-up data
-    // in a convenient way for use in controller: only include name,
-    // current data and a boolean drillable flag.
+  // Go through categories of this segment of interest, mash-up data
+  // in a convenient way for use in controller: only include name,
+  // current data and a boolean drillable flag.
 
-    var rawCategories = budgetSegment.categories;
-    var categories = [];
+  var rawCategories = budgetSegment.categories;
+  var categories = [];
 
-    for (var category in rawCategories) {
-				// cat is a local variable to hold the newly mashed-up data
-				// for a given category. It will populate the categories
-				// variable above
-				var cat = {}; 
-				cat.name = rawCategories[category].name;
-				cat.notes = rawCategories[category].notes;
-				
-				cat['current-data'] = rawCategories[category].data[currentYear];
-				cat.level = rawCategories[category].level;
-				if (_.has(rawCategories[category], 'categories')) {
-						cat.drillable = true;
-				} else {
-						cat.drillable = false;
-				}
-
-				categories.push(cat);
+  for (var category in rawCategories) {
+    // cat is a local variable to hold the newly mashed-up data
+    // for a given category. It will populate the categories
+    // variable above
+    var cat = {}; 
+    cat.name = rawCategories[category].name;
+    cat.notes = rawCategories[category].notes;
+    
+    cat['current-data'] = rawCategories[category].data[currentYear];
+    cat.level = rawCategories[category].level;
+    if (_.has(rawCategories[category], 'categories')) {
+      cat.drillable = true;
+    } else {
+      cat.drillable = false;
     }
 
-    categories.sort(sortCategories);
+    categories.push(cat);
+  }
 
-    // Replace raw categories with only the necessary information to
-    // draw the view. In other words, all data further up the tree
-    // that is not needed will not be included. The mashed-up
-    // categories above will be set instead of the raw categories
-    // (which may or may not contain an arbitrary number of data
-    // further up the tree)
-    return _.deep(budgetSegment, 'categories', categories);
+  categories.sort(sortCategories);
+
+  // Replace raw categories with only the necessary information to
+  // draw the view. In other words, all data further up the tree
+  // that is not needed will not be included. The mashed-up
+  // categories above will be set instead of the raw categories
+  // (which may or may not contain an arbitrary number of data
+  // further up the tree)
+  return _.deep(budgetSegment, 'categories', categories);
 
 };
 
@@ -123,27 +123,27 @@ var drill = function (budget, path, currentYear) {
  *
  * Test it with sample data.
 
-input:
+ input:
 
-[
-    {
-        'key': 'Department for Education',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Health',
-        'y': 1000000000
-    }
-]
+ [
+ {
+ 'key': 'Department for Education',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Health',
+ 'y': 1000000000
+ }
+ ]
 
-output:
-[
-    {
-        'key': 'Others',
-        'values': [ [ 'Department for Education' , 1000000000] , 
-	            [ 'Department for Health' , 1000000000] ]
-    }
-]
+ output:
+ [
+ {
+ 'key': 'Others',
+ 'values': [ [ 'Department for Education' , 1000000000] , 
+ [ 'Department for Health' , 1000000000] ]
+ }
+ ]
 
  * 
  * @param {Array} arr Array of pie chart objects
@@ -151,8 +151,8 @@ output:
  * @return {Array} barData ready for use in D3 charts.
  */
 var convertPieToBarData = function(arr) {    
-    var values = _.map(arr, function(item){ return [item.key, item.y]; });
-    return [{'key': 'Other', 'values': values}];
+  var values = _.map(arr, function(item){ return [item.key, item.y]; });
+  return [{'key': 'Other', 'values': values}];
 };
 
 /**
@@ -166,58 +166,58 @@ var convertPieToBarData = function(arr) {
  * important thing is that the input and output of this function
  * remains the same and everything else should just work.
 
-input: 
-[
-    {
-        'key': 'Department for Education',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Health',
-        'y': 1000000000
-    },
-    ... (many more groups)
-]
+ input: 
+ [
+ {
+ 'key': 'Department for Education',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Health',
+ 'y': 1000000000
+ },
+ ... (many more groups)
+ ]
 
-output:
+ output:
 
-{
-  'top': [
-    {
-        'key': 'Department for Education',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Health',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Justice',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Women',
-        'y': 1000000000
-    },
-    {
-        'key': 'Others',
-        'y': 1000000000
-    }
-  ],
+ {
+ 'top': [
+ {
+ 'key': 'Department for Education',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Health',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Justice',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Women',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Others',
+ 'y': 1000000000
+ }
+ ],
  
-  'Other': [
-    {
-        'key': 'Department for Education',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Health',
-        'y': 1000000000
-    },
-    ... (many more groups)
-  ]
+ 'Other': [
+ {
+ 'key': 'Department for Education',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Health',
+ 'y': 1000000000
+ },
+ ... (many more groups)
+ ]
 
-}
+ }
 
  * 
  * @param {Array} arr array of group objects
@@ -226,25 +226,25 @@ output:
  */
 var groupOthers = function (arr,num) {
 
-    if (arr.length <= num) {
-	return arr;
-    }
+  if (arr.length <= num) {
+    return arr;
+  }
 
-    var top = arr.slice(0,num);
-    var others = arr.slice(num,arr.length);
+  var top = arr.slice(0,num);
+  var others = arr.slice(num,arr.length);
 
-    var othersAggregated = _.reduce(others, 
-				     function(memory,obj) {
-					 return memory + obj.y;},
-				     0);
+  var othersAggregated = _.reduce(others, 
+				  function(memory,obj) {
+				    return memory + obj.y;},
+				  0);
 
-    top.push({'key': 'Other',
-	      'y': othersAggregated});
+  top.push({'key': 'Other',
+	    'y': othersAggregated});
 
-    return {
-	'top' : top,
-	'Other' : convertPieToBarData(others)
-    };
+  return {
+    'top' : top,
+    'Other' : convertPieToBarData(others)
+  };
 
 };
 
@@ -256,48 +256,48 @@ var groupOthers = function (arr,num) {
  *
  * Test it with sample data.
 
-input: 
-[
-    {
-        'name': 'Department for Education',
-        'current-data': {
-            'aggr': null,
-            'change': 4.2,
-            'devel': 1000000000,
-            'more': 'data as needed',
-            'notes': 'Important points here',
-            'recur': 1000000000
-        },
-        'level': 'Program Expenditure',
-        'drillable': true
-    },
-    {
-        'name': 'Department for Health',
-        'current-data': {
-            'aggr': null,
-            'change': 4.2,
-            'devel': 1000000000,
-            'more': 'data as needed',
-            'notes': 'Important points here',
-            'recur': 1000000000
-        },
-        'level': 'Program Expenditure',
-        'drillable': true
-    }
-]
+ input: 
+ [
+ {
+ 'name': 'Department for Education',
+ 'current-data': {
+ 'aggr': null,
+ 'change': 4.2,
+ 'devel': 1000000000,
+ 'more': 'data as needed',
+ 'notes': 'Important points here',
+ 'recur': 1000000000
+ },
+ 'level': 'Program Expenditure',
+ 'drillable': true
+ },
+ {
+ 'name': 'Department for Health',
+ 'current-data': {
+ 'aggr': null,
+ 'change': 4.2,
+ 'devel': 1000000000,
+ 'more': 'data as needed',
+ 'notes': 'Important points here',
+ 'recur': 1000000000
+ },
+ 'level': 'Program Expenditure',
+ 'drillable': true
+ }
+ ]
 
-output:
+ output:
 
-[
-    {
-        'key': 'Department for Education',
-        'y': 1000000000
-    },
-    {
-        'key': 'Department for Health',
-        'y': 1000000000
-    }
-]
+ [
+ {
+ 'key': 'Department for Education',
+ 'y': 1000000000
+ },
+ {
+ 'key': 'Department for Health',
+ 'y': 1000000000
+ }
+ ]
 
  * 
  * @param {Array} categories Array of categories (any level)
@@ -306,22 +306,22 @@ output:
  */
 var getPieChartData = function(categories) {
   
-    var pieData = [];
+  var pieData = [];
 
-    // Just using 'aggr' for now...
-    for(var i=0; i<categories.length; i++) {
-				var aggr = categories[i]['current-data'].aggr;
-				if (aggr) { // Only push data if there is some
-						pieData.push(
-								{
-										key: categories[i].name, 
-										y: parseFloat(aggr) 
-								}
-						);
-				}
+  // Just using 'aggr' for now...
+  for(var i=0; i<categories.length; i++) {
+    var aggr = categories[i]['current-data'].aggr;
+    if (aggr) { // Only push data if there is some
+      pieData.push(
+	{
+	  key: categories[i].name, 
+	  y: parseFloat(aggr) 
+	}
+      );
     }
-    
-    return groupOthers(pieData,16); // will only group if needed
+  }
+  
+  return groupOthers(pieData,16); // will only group if needed
   
 };
 
@@ -332,70 +332,70 @@ var getPieChartData = function(categories) {
  * objects. This is only a convenience function to produce bar charts
  * data. For example,
 
-[input]
-var sample_data = {
-    '2013': {
-        'aggr': 1000000,
-        'program_type': 'recurrent',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    },
-    '2012': {
-        'aggr': 1000000,
-        'program_type': 'development',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    },
-    '2011': {
-        'aggr': 1000000,
-        'program_type': 'recurrent',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    }
-}
+ [input]
+ var sample_data = {
+ '2013': {
+ 'aggr': 1000000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ },
+ '2012': {
+ 'aggr': 1000000,
+ 'program_type': 'development',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ },
+ '2011': {
+ 'aggr': 1000000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ }
+ }
 
-[output]
-[
-  {
-    '2013': {
-      'aggr': 1000000,
-      'program_type': 'recurrent',
-      'notes': 'Important points here',
-      'more': 'data as needed'
-    }
-  },
-  {
-    '2012': {
-      'aggr': 1000000,
-      'program_type': 'development',
-      'notes': 'Important points here',
-      'more': 'data as needed'
-    }
-  },
-  {
-    '2011': {
-      'aggr': 1000000,
-      'program_type': 'recurrent',
-      'notes': 'Important points here',
-      'more': 'data as needed'
-    }
-  }
-]
+ [output]
+ [
+ {
+ '2013': {
+ 'aggr': 1000000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ }
+ },
+ {
+ '2012': {
+ 'aggr': 1000000,
+ 'program_type': 'development',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ }
+ },
+ {
+ '2011': {
+ 'aggr': 1000000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ }
+ }
+ ]
 
  * 
  * @param {Object} obj Object to iterate
  * @return {String} prop String property name
  */
 var objectToArray = function (obj) {
-    var objAsArray = [];
-    for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) { // skip inherited properties
-	    var newObj = {};
-	    newObj[prop] = obj[prop];
-	    objAsArray.push(newObj);
-	}
+  var objAsArray = [];
+  for (var prop in obj) {
+    if (obj.hasOwnProperty(prop)) { // skip inherited properties
+      var newObj = {};
+      newObj[prop] = obj[prop];
+      objAsArray.push(newObj);
     }
-    return objAsArray;
+  }
+  return objAsArray;
 };
 
 /**
@@ -407,11 +407,11 @@ var objectToArray = function (obj) {
  * @return {String} prop String property name
  */
 var getFirstProperty = function (obj) {
-    for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-	    return prop;
-	}
+  for (var prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      return prop;
     }
+  }
 };
 
 /**
@@ -424,37 +424,37 @@ var getFirstProperty = function (obj) {
  * 
  * Test it with sample data.
 
-input: 
-{
-    '2013': {
-        'aggr': 1000000,
-        'program_type': 'recurrent',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    },
-    '2012': {
-        'aggr': 1200000,
-        'program_type': 'development',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    },
-    '2011': {
-        'aggr': 1300000,
-        'program_type': 'recurrent',
-        'notes': 'Important points here',
-        'more': 'data as needed'
-    }
-}
+ input: 
+ {
+ '2013': {
+ 'aggr': 1000000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ },
+ '2012': {
+ 'aggr': 1200000,
+ 'program_type': 'development',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ },
+ '2011': {
+ 'aggr': 1300000,
+ 'program_type': 'recurrent',
+ 'notes': 'Important points here',
+ 'more': 'data as needed'
+ }
+ }
 
-output:
-[
-    {
-        'key': 'Costs',
-        'values': [ [ '2013' , 1000000] , 
-	            [ '2012' , 1200000] , 
-		    [ '2011' , 1300000] ]
-    }
-]
+ output:
+ [
+ {
+ 'key': 'Costs',
+ 'values': [ [ '2013' , 1000000] , 
+ [ '2012' , 1200000] , 
+ [ '2011' , 1300000] ]
+ }
+ ]
 
  * @param {Array} data Array containing the last three years worth of
  * data for a given Department, Program, Sub-program...
@@ -463,73 +463,73 @@ output:
  */
 var getBarChartData = function(data) {
 
-    // First turn the object into array so it can easily be reduced to
-    // a form convenient for D3 charts.
-    var dataAsArray = objectToArray(data);
+  // First turn the object into array so it can easily be reduced to
+  // a form convenient for D3 charts.
+  var dataAsArray = objectToArray(data);
 
-    var barValues = [];
-    var barData = [
-				{
-            'key': 'Expenditure',
-            'values': barValues
-				}
-    ];
+  var barValues = [];
+  var barData = [
+    {
+      'key': 'Expenditure',
+      'values': barValues
+    }
+  ];
 
-    /**
-     * Reduce function that consolidates new bar chart data from the next 
-     * object (i.e. next year)
-     * 
-     * Eventually will have to check for the existance of cost figures 
-     * before trying to get values and pushing them to the set.
-     */
-    var reduceFunction = function(memory, object) {
-				var prop = getFirstProperty(object); // the year
-				var cost = parseInt(object[prop].aggr); //* $scope.currencyMultiplier; // the cost figure
-				
-				barValues = memory[0].values.push([prop,cost]);
-				
-				return 	barData;
-    };
+  /**
+   * Reduce function that consolidates new bar chart data from the next 
+   * object (i.e. next year)
+   * 
+   * Eventually will have to check for the existance of cost figures 
+   * before trying to get values and pushing them to the set.
+   */
+  var reduceFunction = function(memory, object) {
+    var prop = getFirstProperty(object); // the year
+    var cost = parseInt(object[prop].aggr); //* $scope.currencyMultiplier; // the cost figure
+    
+    barValues = memory[0].values.push([prop,cost]);
+    
+    return 	barData;
+  };
 
-    // Not the most purest use of reduce with some imperative stuff
-    // mixed in, but working for now
-    return _.reduce(dataAsArray, reduceFunction, barData);
+  // Not the most purest use of reduce with some imperative stuff
+  // mixed in, but working for now
+  return _.reduce(dataAsArray, reduceFunction, barData);
 
 };
 
 var getPercentageHistory = function (data){
 
-    // First turn the object into array so it can easily be reduced to
-    // a form convenient for D3 charts.
-    var dataAsArray = objectToArray(data);
+  // First turn the object into array so it can easily be reduced to
+  // a form convenient for D3 charts.
+  var dataAsArray = objectToArray(data);
 
-    var barValues = [];
-    var barData = [
-				{
-            'key': 'Percentage',
-            'values': barValues
-				}
-    ];
+  var barValues = [];
+  var barData = [
+    {
+      'key': 'Percentage',
+      'values': barValues
+    }
+  ];
 
-    /**
-     * Reduce function that consolidates new bar chart data from the next 
-     * object (i.e. next year)
-     * 
-     * Eventually will have to check for the existance of cost figures 
-     * before trying to get values and pushing them to the set.
-     */
-    var reduceFunction = function(memory, object) {
-				var prop = getFirstProperty(object); // the year
-				var cost = parseInt(object[prop].percentage);
-				
-				barValues = memory[0].values.push([prop,cost]);
-				
-				return 	barData;
-    };
+  /**
+   * Reduce function that consolidates new bar chart data from the next 
+   * object (i.e. next year)
+   * 
+   * Eventually will have to check for the existance of cost figures 
+   * before trying to get values and pushing them to the set.
+   */
+  var reduceFunction = function(memory, object) {
+    var prop = getFirstProperty(object); // the year
+    var cost = parseInt(object[prop].percentage);
+    
+    barValues = memory[0].values.push([prop,cost]);
+    
+    return 	barData;
+  };
 
-    // Not the most purest use of reduce with some imperative stuff
-    // mixed in, but working for now
-    return _.reduce(dataAsArray, reduceFunction, barData);
+  // Not the most purest use of reduce with some imperative stuff
+  // mixed in, but working for now
+  return _.reduce(dataAsArray, reduceFunction, barData);
 
 };
 
@@ -545,31 +545,31 @@ var getPercentageHistory = function (data){
  *        'Program of Public Health': 'root.depart-health.prg-pub-hea'})
  */
 var getPathMappings = function (budget) {
-    var mapping = {};
+  var mapping = {};
 
-    function process(obj, mapping, current){
-	var ikey, value;
-	for(var key in obj){
-            if(obj.hasOwnProperty(key)){
-		value = obj[key];
-		ikey = current ? current + '.' + key : key;
-		if(typeof value === 'object'){
-                    process(value, mapping, ikey); // recurse deeper
-		} else {
-		    // All paths in the tree are processed, the ones
-		    // ending with .names are the paths of interest
-		    if (ikey.endsWith('.name')) {
-			mapping[value] = ikey.replace('.name','');
-		    }
-		}
-            }
+  function process(obj, mapping, current){
+    var ikey, value;
+    for(var key in obj){
+      if(obj.hasOwnProperty(key)){
+	value = obj[key];
+	ikey = current ? current + '.' + key : key;
+	if(typeof value === 'object'){
+          process(value, mapping, ikey); // recurse deeper
+	} else {
+	  // All paths in the tree are processed, the ones
+	  // ending with .names are the paths of interest
+	  if (ikey.endsWith('.name')) {
+	    mapping[value] = ikey.replace('.name','');
+	  }
 	}
-	return mapping;
-    }    
-
-    process(budget, mapping, '');
-
+      }
+    }
     return mapping;
+  }    
+
+  process(budget, mapping, '');
+
+  return mapping;
 
 };
 
@@ -749,7 +749,7 @@ var sliceByStringElement = function (arr, end, start) {
  * Modify the prototype to add builtin endsWith method
  */
 String.prototype.endsWith = function (s) {
-    return this.length >= s.length && this.substr(this.length - s.length) === s;
+  return this.length >= s.length && this.substr(this.length - s.length) === s;
 };
 
 /**
@@ -764,37 +764,37 @@ String.prototype.contains = function(s) {
  */
 // Truncate a number to ind decimal places
 var truncNb = function(Nb, ind) {
-    var _nb = Nb * (Math.pow(10,ind));
-    _nb = Math.round(_nb);
-    _nb = _nb / (Math.pow(10,ind));
-    return _nb;
+  var _nb = Nb * (Math.pow(10,ind));
+  _nb = Math.round(_nb);
+  _nb = _nb / (Math.pow(10,ind));
+  return _nb;
 };
 // convert a big number to '$num Billion/Million/Thousand'
 var int2roundKMG = function(val) {
-    
-    var _str = '';
+  
+  var _str = '';
 
-    var allCommas = /,/g;
-    val = val.replace(allCommas,'');
-    val = val.replace (/\.*/,'');
+  var allCommas = /,/g;
+  val = val.replace(allCommas,'');
+  val = val.replace (/\.*/,'');
 
-    if (val >= 1e9)        { 
-	_str = truncNb((val/1e9), 2) + ' Billion';
-    } else if (val >= 1e6) { 
-	_str = truncNb((val/1e6), 2) + ' Million';
-    } 
-    else if (val >= 1e3) { 
-	_str = truncNb((val/1e3), 2) + ' Thousand';
-    } else { 
-	_str = parseInt(val);
-    }
-    return _str;
+  if (val >= 1e9)        { 
+    _str = truncNb((val/1e9), 2) + ' Billion';
+  } else if (val >= 1e6) { 
+    _str = truncNb((val/1e6), 2) + ' Million';
+  } 
+  else if (val >= 1e3) { 
+    _str = truncNb((val/1e3), 2) + ' Thousand';
+  } else { 
+    _str = parseInt(val);
+  }
+  return _str;
 };
 
 // Convert numbers into x.xx Millions
 var int2roundM = function(val) {
-    val = val.replace (/\,/g,'');
-    val = val.replace (/\.0/,'');
-    return truncNb((val/1e6), 2);
+  val = val.replace (/\,/g,'');
+  val = val.replace (/\.0/,'');
+  return truncNb((val/1e6), 2);
 };
 
