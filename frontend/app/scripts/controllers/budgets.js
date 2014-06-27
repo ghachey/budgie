@@ -25,8 +25,10 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       'ki':  'Kiribati'
     };
 
-    $scope.countryName = $scope.countryName ? $scope.countryName : countries[country];
-    $scope.currentYear = $scope.currentYear ? $scope.currentYear : $routeParams.year;
+    $scope.countryName = $scope.countryName ? 
+      $scope.countryName : countries[country];
+    $scope.currentYear = $scope.currentYear ? 
+      $scope.currentYear : $routeParams.year;
 
     $log.debug('Current year' , $scope.currentYear);
     // Don't want to cut the functionality just yet...
@@ -137,10 +139,10 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       // Pie chart side
       $scope.name = rawFromDrill.name;
       $scope.level = rawFromDrill.level; // this will be false when in
-                                         // non-drillable territory, but it
-                                         // does not seem to be used anymore
+      // non-drillable territory, but it
+      // does not seem to be used anymore
       var newPie = getPieChartData(rawFromDrill.categories);
-      pie = (Array.isArray(newPie) && newPie.length==0) ? pie : newPie;
+      pie = (Array.isArray(newPie) && newPie.length===0) ? pie : newPie;
       $log.debug('Name and level: ', $scope.name, $scope.level);
       $log.debug('Actual pie data: ', pie);
 
@@ -263,7 +265,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
           // within this context such as changing the palette.
         }
       }	    
-     
+      
       process();
       $scope.$apply(); // to pass new data to angularjs-nvd3-directives
 
