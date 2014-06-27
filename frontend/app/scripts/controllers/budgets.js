@@ -1,6 +1,6 @@
 /* global 
  getPathMappings, drill, getPieChartData, int2roundKMG, sliceByStringElement, 
- int2roundM, getBarChartData, getPercentageHistory, createStoryJS 
+ int2roundM, getBarChartData, getPercentageHistory
  */
 
 'use strict';
@@ -31,13 +31,15 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     $log.debug('Current year' , $scope.currentYear);
     // Don't want to cut the functionality just yet...
     $scope.showButtons = $routeParams.country ==='razzle-dazzle' ? true : false;
-    $scope.currentDocument = $scope.currentDocument? $scope.currentDocument : country + '-' + $scope.currentYear;
+    $scope.currentDocument = $scope.currentDocument ? 
+      $scope.currentDocument : country + '-' + $scope.currentYear;
 
+    // TO REMOVE - Does not seem to be used anywhere
     // Use this for roll-up / unroll animations.
-    var emptyPie = [{ 
-      'label': '',
-      'value' : 0
-    }];
+    // var emptyPie = [{ 
+    //   'label': '',
+    //   'value' : 0
+    // }];
 
     var palettes = [
       [
@@ -107,11 +109,13 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	// features (chart data, further drill paths,
 	// information box summary data...).
 
-	rawFromDrill = drill(rawFromCouch,path, $scope.currentYear);
+	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
 	$log.debug('Data as processed by drill: ',rawFromDrill);
 
-	$scope.budgetCurrency = rawFromCouch.root.currency ? rawFromCouch.root.currency.toUpperCase() : '';
-	$scope.currencyMultiplier = rawFromCouch.root.multiplier ? rawFromCouch.root.multiplier : 1;
+	$scope.budgetCurrency = rawFromCouch.root.currency ? 
+          rawFromCouch.root.currency.toUpperCase() : '';
+	$scope.currencyMultiplier = rawFromCouch.root.multiplier ? 
+          rawFromCouch.root.multiplier : 1;
 
 	$scope.breadcrumbs.push(rawFromDrill.name);
 
@@ -122,16 +126,23 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
         $log.error('Error callback: ', data, status, headers, config);
       });
 
+    // Track state of previous pie data (refer to elementClick.directive event
+    // and process below)
+    var pie = null;
+
     var process = function () {
       
-      $log.debug('Processing data for display...');
+      $log.debug('Processing data for display...', options);
 
       // Pie chart side
       $scope.name = rawFromDrill.name;
-      $scope.level = rawFromDrill.level;
-      $log.debug('Pie Data:', getPieChartData(rawFromDrill.categories));
-
-      var pie = getPieChartData(rawFromDrill.categories);
+      $scope.level = rawFromDrill.level; // this will be false when in
+                                         // non-drillable territory, but it
+                                         // does not seem to be used anymore
+      var newPie = getPieChartData(rawFromDrill.categories);
+      pie = (Array.isArray(newPie) && newPie.length==0) ? pie : newPie;
+      $log.debug('Name and level: ', $scope.name, $scope.level);
+      $log.debug('Actual pie data: ', pie);
 
       // This will continuously populate (well, update when
       // property is present) so it is not quite the most
@@ -142,7 +153,6 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       rawFromDrill.categories.forEach(function(elem) {
 	drillableMappings[elem.name] = elem.drillable;
       });
-
       $log.debug('Drillables: ', drillableMappings);
 
       if( Object.prototype.toString.call( pie ) === '[object Array]' ) {
@@ -179,7 +189,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
     };
 
-    $scope.tooltipContent = function(key, x, y, e, graph) {
+    $scope.tooltipContent = function(key, x, y) {
 
       var notes = '';
       if (typeof($scope.notes) !== 'undefined'){
@@ -208,39 +218,55 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
       };
     };
 
-    $scope.$on('tooltipShow.directive', function(event){
-      $log.debug('scope.tooltipShow', event);
-    });
+    // TO REMOVE - Do we need these events?
+    // $scope.$on('tooltipShow.directive', function(event){
+    //   $log.debug('scope.tooltipShow', event);
+    // });
 
-    $scope.$on('tooltipHide.directive', function(event){
-      $log.debug('scope.tooltipHide', event);
-    });
+    // $scope.$on('tooltipHide.directive', function(event){
+    //   $log.debug('scope.tooltipHide', event);
+    // });
     
-    $scope.$on('stateChange.directive', function(event){
-      $log.debug('stateChange.directive', event);
-    });
+    // $scope.$on('stateChange.directive', function(event){
+    //   $log.debug('stateChange.directive', event);
+    // });
 
     $scope.$on('elementClick.directive', function(event, data){
-      
-      $scope.showOthers = false;
 
-      // change if logic here...but first get things working
+      $log.debug('Slice clicked with data: ', data);
+      $scope.showOthers = false;
+      path = pathMappings[data.label];
+      $log.debug('Slice clicked with path: ', path);
+
       if (data.label === 'Other') {
-	$log.debug('Path: ', path);
 	$scope.showOthers = true;
       } else {
-	$log.debug('Before push: ', rawFromDrill);
-	
+        rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
+        $log.debug('Data from drill: ', rawFromDrill);
 	if (drillableMappings[data.label] === true) {
+          $log.debug('Path is drillable...');
 	  $scope.breadcrumbs.push(data.label);
-	}
-	path = pathMappings[data.label];
-	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
+          $scope.nextPalette();
+	} else {
+          $log.debug('Path is not drillable...');
+          // When no longer drillable a tricky thing happen. drill
+          // returns the desired label and historical data
+          // but without any further categories (it's not drillable)
+          // and thefore no pie chart data. An old buggy version 
+          // of angularjs-nvd3-directives would misbehave and conveniently
+          // keep the old pie data set keeping the pie chart alive even
+          // in the absence of pie data. The newer version correctly
+          // passes no data and hence the pie chart disappears when clicking
+          // on a non-drillable slice. I handle this by keeping track
+          // of the previous pie data which is a bit hack'ish but seems to work
+          // I leave this 'else' path here in case some actions are desired 
+          // within this context such as changing the palette.
+        }
       }	    
-      $scope.nextPalette();
-      
+     
       process();
-      $scope.$apply();
+      $scope.$apply(); // to pass new data to angularjs-nvd3-directives
+
     });
 
     $scope.radioModel =  'spending';
@@ -251,7 +277,8 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       $scope.radioModel = which;
       $scope.currentDocument = country + '-' + $scope.currentYear;
-      $scope.currentDocument = which !== 'spending' ? $scope.currentDocument + '-' + which : $scope.currentDocument;
+      $scope.currentDocument = which !== 'spending' ? 
+        $scope.currentDocument + '-' + which : $scope.currentDocument;
 
       BudgetFactory
         .get($scope.currentDocument)
@@ -261,7 +288,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	  path = 'root';
 	  rawFromCouch = data; 
 
-	  rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	  rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
 	  $scope.breadcrumbs = [rawFromDrill.name];
 	  $scope.nextPalette();
 	  
@@ -276,7 +303,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
     $scope.reloadBreadcrumbs = function(crumb){
       $scope.showOthers = false;
-      $scope.breadcrumbs = sliceByStringElement($scope.breadcrumbs,crumb);
+      $scope.breadcrumbs = sliceByStringElement($scope.breadcrumbs, crumb);
       path = pathMappings[crumb];
       rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
       $scope.nextPalette();
@@ -328,7 +355,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
     };
 
 
-    $scope.percentageHistoryTooltips = function(key, x, y, e, graph) {
+    $scope.percentageHistoryTooltips = function(key, x, y) {
       return '<h3>' + $scope.name + '</h3>' +
 	'<p>' + y + '% of Overall ' + $scope.historyLabel + ' Spending<br />' + 
 	'in ' + x + '</p>';
@@ -802,7 +829,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
      */
 
-    $scope.lineChartTooltips = function(key, x, y, e, graph) {
+    $scope.lineChartTooltips = function(key, x, y) {
 
       // otherIndex never used, dead code?
       //var otherIndex = e.seriesIndex === 0 ? 1 : 0;
@@ -817,7 +844,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 	'<p>(' + int2roundKMG((gap  * 1000000).toString().replace('-', '')) + ' vatu ' + spendingStatus + ')</p>';
     };
 
-    $scope.overspendChartTooltips = function(key, x, y, e, graph) {
+    $scope.overspendChartTooltips = function(key, x, y) {
 
       var index = x - 2012; // Yep, magic number :-/
       var percentOverspend = parseFloat($scope.vuScholarshipOverspend[1].values[index][1] / $scope.vuScholarshipOverspend[0].values[index][1] * 100).toFixed(2);
@@ -828,35 +855,35 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
     };
 
 
-    $scope.lineChartTooltipsGDP = function(key, x, y, e, graph) {
+    $scope.lineChartTooltipsGDP = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% points<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsDebtGDP = function(key, x, y, e, graph) {
+    $scope.lineChartTooltipsDebtGDP = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '% of GDP<br />in ' + x + '</p>';
     };
 
-    $scope.lineChartTooltipsEducation = function(key, x, y, e, graph) {
+    $scope.lineChartTooltipsEducation = function(key, x, y) {
       $log.debug('BOO!');
       return '<h3>' + key + '</h3>' +
 	'<p>' + y + '%<br />in ' + x + '</p>';
     };
 
-    $scope.areaChartTooltips = function(key, x, y, e, graph) {
+    $scope.areaChartTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000000).toString()) + ' VATU<br />in ' + x + '</p>';
     };
 
-    $scope.vuSelectedCategoryTooltips = function(key, x, y, e, graph) {
+    $scope.vuSelectedCategoryTooltips = function(key, x, y) {
       var label = x;
       label = label.replace(/Min\./, 'Ministry of');
       return '<h3>' + label + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /></p>';
     };
 
-    $scope.stackedLineTooltips = function(key, x, y, e, graph) {
+    $scope.stackedLineTooltips = function(key, x, y, e) {
 
       var label = '';
       var total = 0;
@@ -886,17 +913,17 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.debtRepaymentTooltips = function(key, x, y, e, graph) {
+    $scope.debtRepaymentTooltips = function(key, x, y) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' VATU<br /> in ' + key + '</p>';
     };
 
-    $scope.pieTooltips = function(key, x, y, e, graph) {
+    $scope.pieTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG(parseFloat(y.value).toString()) + '<br />VATU</p>';
     };
 
-    $scope.pngDeficitTooltips = function(key, x, y, e, graph) {
+    $scope.pngDeficitTooltips = function(key, x, y) {
 
       // Handle negatives.
       var minus = y.indexOf('-') === 0 ? '-' : '';
@@ -908,7 +935,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
     };
 
-    $scope.pngBorrowingTooltips = function(key, x, y, e, graph) {
+    $scope.pngBorrowingTooltips = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' KINA<br />in ' + x + '</p>';
     };
@@ -935,32 +962,46 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 
     var palettes = [
       [
-	'#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#e6550d', '#fd8d3c', '#fdae6b', '#fdd0a2', '#31a354', '#74c476', '#a1d99b', 
-	'#c7e9c0', '#756bb1', '#9e9ac8', '#bcbddc', '#dadaeb', '#636363', '#969696', '#bdbdbd', '#d9d9d9'
+	'#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#e6550d', '#fd8d3c', 
+        '#fdae6b', '#fdd0a2', '#31a354', '#74c476', '#a1d99b', '#c7e9c0', 
+        '#756bb1', '#9e9ac8', '#bcbddc', '#dadaeb', '#636363', '#969696', 
+        '#bdbdbd', '#d9d9d9'
       ],
       [
-	'#393b79', '#5254a3', '#6b6ecf', '#9c9ede', '#637939', '#8ca252', '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39', '#e7ba52', 
-	'#e7cb94', '#843c39', '#ad494a', '#d6616b', '#e7969c', '#7b4173', '#a55194', '#ce6dbd', '#de9ed6'
+	'#393b79', '#5254a3', '#6b6ecf', '#9c9ede', '#637939', '#8ca252', 
+        '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39', '#e7ba52', '#e7cb94', 
+        '#843c39', '#ad494a', '#d6616b', '#e7969c', '#7b4173', '#a55194', 
+        '#ce6dbd', '#de9ed6'
       ],
       [
-	'#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', 
-	'#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5'
+	'#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', 
+        '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', 
+        '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', 
+        '#17becf', '#9edae5'
       ],
       [
-	'#9edae5', '#17becf', '#dbdb8d', '#bcbd22', '#c7c7c7', '#7f7f7f', '#f7b6d2', '#e377c2', '#c49c94', '#8c564b', '#c5b0d5', 
-	'#9467bd', '#ff9896', '#d62728', '#98df8a', '#2ca02c', '#ffbb78', '#ff7f0e', '#aec7e8', '#1f77b4'
+	'#9edae5', '#17becf', '#dbdb8d', '#bcbd22', '#c7c7c7', '#7f7f7f', 
+        '#f7b6d2', '#e377c2', '#c49c94', '#8c564b', '#c5b0d5', '#9467bd', 
+        '#ff9896', '#d62728', '#98df8a', '#2ca02c', '#ffbb78', '#ff7f0e', 
+        '#aec7e8', '#1f77b4'
       ],
       [
-	'#de9ed6', '#ce6dbd', '#a55194', '#7b4173', '#e7969c', '#d6616b', '#ad494a', '#843c39', '#e7cb94', '#e7ba52', '#bd9e39', 
-	'#8c6d31', '#cedb9c', '#b5cf6b', '#8ca252', '#637939', '#9c9ede', '#6b6ecf', '#5254a3', '#393b79'
+	'#de9ed6', '#ce6dbd', '#a55194', '#7b4173', '#e7969c', '#d6616b', 
+        '#ad494a', '#843c39', '#e7cb94', '#e7ba52', '#bd9e39', '#8c6d31', 
+        '#cedb9c', '#b5cf6b', '#8ca252', '#637939', '#9c9ede', '#6b6ecf', 
+        '#5254a3', '#393b79'
       ],	    
       [
-	'#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', 
-	'#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5'
+	'#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', 
+        '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', 
+        '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', 
+        '#17becf', '#9edae5'
       ],
       [
-	'#393b79', '#5254a3', '#6b6ecf', '#9c9ede', '#637939', '#8ca252', '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39', '#e7ba52', 
-	'#e7cb94', '#843c39', '#ad494a', '#d6616b', '#e7969c', '#7b4173', '#a55194', '#ce6dbd', '#de9ed6'
+	'#393b79', '#5254a3', '#6b6ecf', '#9c9ede', '#637939', '#8ca252', 
+        '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39', '#e7ba52', '#e7cb94', 
+        '#843c39', '#ad494a', '#d6616b', '#e7969c', '#7b4173', '#a55194', 
+        '#ce6dbd', '#de9ed6'
       ]
     ];
 
@@ -981,7 +1022,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 	// features (chart data, further drill paths,
 	// information box summary data...).
 
-	rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
 	$log.debug('Data as processed by drill: ',rawFromDrill);
 	$scope.annualTotal = int2roundKMG(rawFromDrill.data[$scope.currentYear].aggr.toString());
 	process();
@@ -1008,13 +1049,13 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       }
     };
 
-    $scope.tooltipContent = function(key, x, y, e, graph) {
+    $scope.tooltipContent = function(key, x, y) {
       return '<h3>' + key + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y.value) * $scope.currencyMultiplier).toString()) + '<br />' + $scope.budgetCurrency + '</p>' +
 	'<p><em>(Click for full listing)</em></p>';
     };
 
-    $scope.barChartTooltips = function(key, x, y, e, graph) {
+    $scope.barChartTooltips = function(key, x, y) {
       return '<h3>' + x + '</h3>' +
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + '<br />' + $scope.budgetCurrency + '</p>';
     };
@@ -1031,10 +1072,10 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       };
     };
 
-    $scope.$on('elementClick.directive', function(event,data){
+    $scope.$on('elementClick.directive', function(event, data){
       
       path = pathMappings[data.label];
-      rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+      rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
       process();
       
     });
@@ -1059,7 +1100,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 	  path                   = 'root';
 	  rawFromCouch           = data; 
 
-	  rawFromDrill = drill(rawFromCouch,path,$scope.currentYear);
+	  rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
 	  $log.debug('RAW: ', rawFromDrill);
 	  $scope.annualTotal = int2roundKMG(rawFromDrill.data[$scope.currentYear].aggr.toString());
 	  process();
