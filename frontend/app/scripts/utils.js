@@ -330,66 +330,15 @@ var getPieChartData = function(categories) {
  *
  * Small utility to return an object turned into an array of
  * objects. This is only a convenience function to produce bar charts
- * data. For example,
-
- [input]
- var sample_data = {
- '2013': {
- 'aggr': 1000000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- },
- '2012': {
- 'aggr': 1000000,
- 'program_type': 'development',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- },
- '2011': {
- 'aggr': 1000000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- }
- }
-
- [output]
- [
- {
- '2013': {
- 'aggr': 1000000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- }
- },
- {
- '2012': {
- 'aggr': 1000000,
- 'program_type': 'development',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- }
- },
- {
- '2011': {
- 'aggr': 1000000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- }
- }
- ]
-
+ * data. Refer to test/specs/utils.js for example usage.
  * 
  * @param {Object} obj Object to iterate
- * @return {String} prop String property name
+ * @return {Array} objAsArray an array of objects
  */
 var objectToArray = function (obj) {
   var objAsArray = [];
   for (var prop in obj) {
-    if (obj.hasOwnProperty(prop)) { // skip inherited properties
+    if (obj.hasOwnProperty(prop)) {
       var newObj = {};
       newObj[prop] = obj[prop];
       objAsArray.push(newObj);
@@ -412,6 +361,7 @@ var getFirstProperty = function (obj) {
       return prop;
     }
   }
+  return null;
 };
 
 /**
@@ -420,46 +370,12 @@ var getFirstProperty = function (obj) {
  * This utility function is used to mash-up data from model into D3
  * bar chart ready data. At the moment is only prepares bar chart data
  * using the aggregate costs but this can later be refined to do what we
- * want.
+ * want. Refer to test/specs/utils.js for usage example.
  * 
- * Test it with sample data.
-
- input: 
- {
- '2013': {
- 'aggr': 1000000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- },
- '2012': {
- 'aggr': 1200000,
- 'program_type': 'development',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- },
- '2011': {
- 'aggr': 1300000,
- 'program_type': 'recurrent',
- 'notes': 'Important points here',
- 'more': 'data as needed'
- }
- }
-
- output:
- [
- {
- 'key': 'Costs',
- 'values': [ [ '2013' , 1000000] , 
- [ '2012' , 1200000] , 
- [ '2011' , 1300000] ]
- }
- ]
-
  * @param {Array} data Array containing the last three years worth of
  * data for a given Department, Program, Sub-program...
  * 
- * @return {Array} barData ready for use in D3 charts.
+ * @return {Array} barData ready for use in D3 charts (i.e. NVD3).
  */
 var getBarChartData = function(data) {
 
