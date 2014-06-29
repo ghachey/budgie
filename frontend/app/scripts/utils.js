@@ -1,8 +1,7 @@
 /* global _ */
 /* exported  drill, getPieChartData, getBarChartData, convertPieToBarData,
  getFirstProperty, objectToArray, getPathMappings,
- sliceByStringElement, groupOthers, endsWith, contains, truncNb,
- int2roundKMG, int2roundM, getPercentageHistory */
+ sliceByStringElement, groupOthers, endsWith, contains */
 
 /**
  * @license GPLv2
@@ -377,44 +376,13 @@ var getFirstProperty = function (obj) {
  * 
  * @return {Array} barData ready for use in D3 charts (i.e. NVD3).
  */
-var getBarChartData = function(data) {
+var getBarChartData = function(data, options) {
 
-  // First turn the object into array so it can easily be reduced to
-  // a form convenient for D3 charts.
-  var dataAsArray = objectToArray(data);
-
-  var barValues = [];
-  var barData = [
-    {
-      'key': 'Expenditure',
-      'values': barValues
-    }
-  ];
-
-  /**
-   * Reduce function that consolidates new bar chart data from the next 
-   * object (i.e. next year)
-   * 
-   * Eventually will have to check for the existance of cost figures 
-   * before trying to get values and pushing them to the set.
-   */
-  var reduceFunction = function(memory, object) {
-    var prop = getFirstProperty(object); // the year
-    var cost = parseInt(object[prop].aggr); //* $scope.currencyMultiplier; // the cost figure
-    
-    barValues = memory[0].values.push([prop,cost]);
-    
-    return 	barData;
+  var figures = {
+    'percentage': 'Percentage',
+    'aggr': 'Expenditure'
   };
 
-  // Not the most purest use of reduce with some imperative stuff
-  // mixed in, but working for now
-  return _.reduce(dataAsArray, reduceFunction, barData);
-
-};
-
-var getPercentageHistory = function (data){
-
   // First turn the object into array so it can easily be reduced to
   // a form convenient for D3 charts.
   var dataAsArray = objectToArray(data);
@@ -422,7 +390,7 @@ var getPercentageHistory = function (data){
   var barValues = [];
   var barData = [
     {
-      'key': 'Percentage',
+      'key': figures[options.figure],
       'values': barValues
     }
   ];
@@ -436,9 +404,9 @@ var getPercentageHistory = function (data){
    */
   var reduceFunction = function(memory, object) {
     var prop = getFirstProperty(object); // the year
-    var cost = parseInt(object[prop].percentage);
+    var cost = parseInt(object[prop][options.figure]); 
     
-    barValues = memory[0].values.push([prop,cost]);
+    barValues = memory[0].values.push([prop, cost]);
     
     return 	barData;
   };
@@ -452,7 +420,8 @@ var getPercentageHistory = function (data){
 /**
  * @description
  *
- * Utility to return a convenient mapping of all possible paths in a JSON budget
+ * Utility to return a convenient mapping of all possible paths in a JSON budget.
+ * Example usage in test/specs/utils.js
  * 
  * @param {Object} budget Object the full yearly budget model for a
  * given Pacific country
@@ -660,6 +629,7 @@ var sliceByStringElement = function (arr, end, start) {
 // Normally shouldn't modify base objects I don't own. But fuck it,
 // whoever works on this code base will have to pay attention so I can
 // get my convenient and clear methods :)
+// Besides, those are part of the proposal for ECMAScript 6 anyway.
 
 /**
  * Modify the prototype to add builtin endsWith method
@@ -674,43 +644,3 @@ String.prototype.endsWith = function (s) {
 String.prototype.contains = function(s) {
   return this.indexOf(s) !== -1;
 };
-
-/** 
- * These are to format numbers to make them more lay-person friendly
- */
-// Truncate a number to ind decimal places
-var truncNb = function(Nb, ind) {
-  var _nb = Nb * (Math.pow(10,ind));
-  _nb = Math.round(_nb);
-  _nb = _nb / (Math.pow(10,ind));
-  return _nb;
-};
-// convert a big number to '$num Billion/Million/Thousand'
-var int2roundKMG = function(val) {
-  
-  var _str = '';
-
-  var allCommas = /,/g;
-  val = val.replace(allCommas,'');
-  val = val.replace (/\.*/,'');
-
-  if (val >= 1e9)        { 
-    _str = truncNb((val/1e9), 2) + ' Billion';
-  } else if (val >= 1e6) { 
-    _str = truncNb((val/1e6), 2) + ' Million';
-  } 
-  else if (val >= 1e3) { 
-    _str = truncNb((val/1e3), 2) + ' Thousand';
-  } else { 
-    _str = parseInt(val);
-  }
-  return _str;
-};
-
-// Convert numbers into x.xx Millions
-var int2roundM = function(val) {
-  val = val.replace (/\,/g,'');
-  val = val.replace (/\.0/,'');
-  return truncNb((val/1e6), 2);
-};
-

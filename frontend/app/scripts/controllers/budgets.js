@@ -1,6 +1,5 @@
 /* global 
- getPathMappings, drill, getPieChartData, int2roundKMG, sliceByStringElement, 
- int2roundM, getBarChartData, getPercentageHistory
+ getPathMappings, drill, getPieChartData, sliceByStringElement, getBarChartData
  */
 
 'use strict';
@@ -9,8 +8,10 @@
 
 angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
 
-  .controller('BudgetCtrl', ['$scope', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $location, $routeParams, $log, BudgetFactory) {
+  .controller('BudgetCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $filter, $location, $routeParams, $log, BudgetFactory) {
 
+    var int2roundKMG = $filter('int2roundKMG');
+    var int2roundM = $filter('int2roundM');
     var rawFromCouch = {}; // Keep the complete data set in frontend
     var rawFromDrill = {}; // Current mashed-up reduced data of interest
     var pathMappings = {}; // Convenient path mappings
@@ -171,11 +172,13 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 
       // Information box and bar chart side. 
       $scope.notes = rawFromDrill.notes;
-      $scope.stackedBarChartData = getBarChartData(rawFromDrill.data);
+      $scope.stackedBarChartData = getBarChartData(rawFromDrill.data, 
+                                                   {'figure': 'aggr'});
       $scope.showPercentage = false;
       if ((country === 'ki') && typeof($scope.level) !== 'undefined'){
 	$scope.showPercentage = true;
-	$scope.percentageHistory = getPercentageHistory(rawFromDrill.data);
+	$scope.percentageHistory = getBarChartData(rawFromDrill.data,
+                                                   {'figure': 'percentage'});
       }
 
       if ($scope.breadcrumbs[$scope.breadcrumbs.length - 1] === $scope.name){
@@ -368,7 +371,10 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 // One-off charts controller
 angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
 
-  .controller('oneOffChartsCtrl', ['$scope', '$location', '$routeParams', '$log', function ($scope, $location, $routeParams, $log) {
+  .controller('oneOffChartsCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', function ($scope, $filter, $location, $routeParams, $log) {
+
+    var int2roundKMG = $filter('int2roundKMG');
+    var int2roundM = $filter('int2roundM');
 
     // Pushed a brewer palette pair into the first two positions.
     // Otherwise, it's the nvd3 default 20 colour palette
@@ -947,8 +953,9 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 
 angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
 
-  .controller('NPPCtrl', ['$scope', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $location, $routeParams, $log, BudgetFactory) {
+  .controller('NPPCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $filter, $location, $routeParams, $log, BudgetFactory) {
 
+    var int2roundKMG = $filter('int2roundKMG');
     var rawFromCouch = {}; // Keep the complete data set in frontend
     var rawFromDrill = {}; // Current mashed-up reduced data of interest
     var pathMappings = {}; // Convenient path mappings
