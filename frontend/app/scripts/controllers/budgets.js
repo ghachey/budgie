@@ -105,7 +105,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	pathMappings = getPathMappings(data);
 	$log.debug('Path mappings: ', pathMappings);
 	rawFromCouch = data; 
-	$log.debug('Data as stored in CouchDB: ',rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
@@ -113,7 +113,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	// information box summary data...).
 
 	rawFromDrill = drill(rawFromCouch, path, $scope.currentYear);
-	$log.debug('Data as processed by drill: ',rawFromDrill);
+	$log.debug('Data as processed by drill: ', rawFromDrill);
 
 	$scope.budgetCurrency = rawFromCouch.root.currency ? 
           rawFromCouch.root.currency.toUpperCase() : '';

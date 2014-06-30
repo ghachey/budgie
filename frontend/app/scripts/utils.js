@@ -1,5 +1,5 @@
 /* global _ */
-/* exported  drill, getPieChartData, getBarChartData, convertPieToBarData,
+/* exported drill, getPieChartData, getBarChartData, convertPieToBarData,
  getFirstProperty, objectToArray, getPathMappings,
  sliceByStringElement, groupOthers, endsWith, contains */
 
@@ -59,9 +59,12 @@ var sortCategories = function (a, b) {
  * 
  * @param {Object} budget Object the full yearly budget model for a
  * given Pacific country
- * 
- * @param {String} path String representing the path to the are of
+ * @param {String} path String representing the path to the area of
  * interest. For example, 'root.categories.depart-health'
+ * @param {String} currentYear The year (e.g. 2013, 2014)
+ * 
+ * @return {Object} Object with budget data of interest for a specific location
+ *                  in the whole budget formatted in a convenient way
  */
 var drill = function (budget, path, currentYear) {
 
@@ -72,8 +75,6 @@ var drill = function (budget, path, currentYear) {
   // contain all raw data from point of interest all the way up the
   // tree.
   var budgetSegment = _.deep(budgetCopy, path);
-
-  //console.debug('Budget segment: ', budgetSegment);
 
   // Go through categories of this segment of interest, mash-up data
   // in a convenient way for use in controller: only include name,
@@ -118,32 +119,8 @@ var drill = function (budget, path, currentYear) {
  *
  * This utility function is to go from pie chart data to a simple one
  * series bar chart data. It is used mainly to display the 'others'
- * slice in a pie chart as bar chart.
- *
- * Test it with sample data.
-
- input:
-
- [
- {
- 'key': 'Department for Education',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Health',
- 'y': 1000000000
- }
- ]
-
- output:
- [
- {
- 'key': 'Others',
- 'values': [ [ 'Department for Education' , 1000000000] , 
- [ 'Department for Health' , 1000000000] ]
- }
- ]
-
+ * slice in a pie chart as bar chart. Refer to unit tests for
+ * example usage.
  * 
  * @param {Array} arr Array of pie chart objects
  * 
@@ -164,73 +141,22 @@ var convertPieToBarData = function(arr) {
  * could be implemented by passing in a function as argument. The only
  * important thing is that the input and output of this function
  * remains the same and everything else should just work.
-
- input: 
- [
- {
- 'key': 'Department for Education',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Health',
- 'y': 1000000000
- },
- ... (many more groups)
- ]
-
- output:
-
- {
- 'top': [
- {
- 'key': 'Department for Education',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Health',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Justice',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Women',
- 'y': 1000000000
- },
- {
- 'key': 'Others',
- 'y': 1000000000
- }
- ],
- 
- 'Other': [
- {
- 'key': 'Department for Education',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Health',
- 'y': 1000000000
- },
- ... (many more groups)
- ]
-
- }
-
+ * Refer to unit tests for example usage.
  * 
  * @param {Array} arr array of group objects
  * @param {Number} num Number of slices
  * @return {Object} obj Object containing the top and others separately
  */
-var groupOthers = function (arr,num) {
+var groupOthers = function (arr, num) {
+
+  if (num === undefined) {throw 'No cutoff provided';}
 
   if (arr.length <= num) {
     return arr;
   }
 
-  var top = arr.slice(0,num);
-  var others = arr.slice(num,arr.length);
+  var top = arr.slice(0, num);
+  var others = arr.slice(num, arr.length);
 
   var othersAggregated = _.reduce(others, 
 				  function(memory,obj) {
@@ -251,53 +177,7 @@ var groupOthers = function (arr,num) {
  * @description
  *
  * This utility function is used mash-up data from model into D3 pie
- * chart ready data. 
- *
- * Test it with sample data.
-
- input: 
- [
- {
- 'name': 'Department for Education',
- 'current-data': {
- 'aggr': null,
- 'change': 4.2,
- 'devel': 1000000000,
- 'more': 'data as needed',
- 'notes': 'Important points here',
- 'recur': 1000000000
- },
- 'level': 'Program Expenditure',
- 'drillable': true
- },
- {
- 'name': 'Department for Health',
- 'current-data': {
- 'aggr': null,
- 'change': 4.2,
- 'devel': 1000000000,
- 'more': 'data as needed',
- 'notes': 'Important points here',
- 'recur': 1000000000
- },
- 'level': 'Program Expenditure',
- 'drillable': true
- }
- ]
-
- output:
-
- [
- {
- 'key': 'Department for Education',
- 'y': 1000000000
- },
- {
- 'key': 'Department for Health',
- 'y': 1000000000
- }
- ]
-
+ * chart ready data. Refer to unit tests for sample usage
  * 
  * @param {Array} categories Array of categories (any level)
  * 
@@ -493,138 +373,6 @@ var sliceByStringElement = function (arr, end, start) {
   return newArr;
 
 };
-
-// Push this data to unit tests
-// var samplePieSlices = [
-//   {
-//     'key': 'Treasury and Finance Misc',
-//     'y': 1130200
-//   },
-//   {
-//     'key': 'Public Debt Charges',
-//     'y': 751300
-//   },
-//   {
-//     'key': 'Department of National Planning and Monitoring',
-//     'y': 516712.9
-//   },
-//   {
-//     'key': 'Department of Treasury',
-//     'y': 220498.5
-//   },
-//   {
-//     'key': 'Department of Prime Minister & NEC',
-//     'y': 189336.2
-//   },
-//   {
-//     'key': 'Department of Personnel Management',
-//     'y': 169657.8
-//   },
-//   {
-//     'key': 'National Parliament',
-//     'y': 130724.6
-//   },
-//   {
-//     'key': 'Department of Foreign Affairs and Trade',
-//     'y': 127110.1
-//   },
-//   {
-//     'key': 'Internal Revenue Commission',
-//     'y': 76235
-//   },
-//   {
-//     'key': 'Department for Local and Provincial Affairs',
-//     'y': 74723.7
-//   },
-//   {
-//     'key': 'PNG Customs Service',
-//     'y': 63498.2
-//   },
-//   {
-//     'key': 'Department of Finance',
-//     'y': 52326.2
-//   },
-//   {
-//     'key': 'Provincial Treasuries',
-//     'y': 40059.1
-//   },
-//   {
-//     'key': 'Electoral Commission',
-//     'y': 36981.2
-//   },
-//   {
-//     'key': 'Department of Industrial Relations',
-//     'y': 27093.3
-//   },
-//   {
-//     'key': 'PNG Fire Services',
-//     'y': 22616.4
-//   },
-//   {
-//     'key': 'Information Technology Division',
-//     'y': 19778.8
-//   },
-//   {
-//     'key': 'Ombudsman Commission',
-//     'y': 18115
-//   },
-//   {
-//     'key': 'Office of the Auditor-General',
-//     'y': 18001
-//   },
-//   {
-//     'key': 'PNG Immigration and Citizenship Services',
-//     'y': 8665.5
-//   },
-//   {
-//     'key': 'Registrar For Politcal Parties',
-//     'y': 7472.3
-//   },
-//   {
-//     'key': 'PNG Institute of Public Administration',
-//     'y': 6819.1
-//   },
-//   {
-//     'key': 'Public Service Commission',
-//     'y': 6188.8
-//   },
-//   {
-//     'key': 'National Statistical Office ',
-//     'y': 6008.1
-//   },
-//   {
-//     'key': 'Papua New Guinea Accidents Investigation Commission',
-//     'y': 5566
-//   },
-//   {
-//     'key': 'Office of Governor-General',
-//     'y': 4706.5
-//   },
-//   {
-//     'key': 'National Intelligence Organisation',
-//     'y': 4372.5
-//   },
-//   {
-//     'key': 'Office of Bougainville Affairs',
-//     'y': 3293.7
-//   },
-//   {
-//     'key': 'National Training Council',
-//     'y': 3125
-//   },
-//   {
-//     'key': 'National Economic & Fiscal Commission',
-//     'y': 2920
-//   },
-//   {
-//     'key': 'Central Supply & Tenders Board',
-//     'y': 2636.9
-//   },
-//   {
-//     'key': 'National Tripartite Consultative Council',
-//     'y': 850.4
-//   }
-// ];
 
 // Normally shouldn't modify base objects I don't own. But fuck it,
 // whoever works on this code base will have to pay attention so I can

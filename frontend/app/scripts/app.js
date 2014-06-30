@@ -8,6 +8,7 @@ var pippDataApp = angular.module('pippDataApp',
 				  'pippDataApp.controllers.one-off-charts',
 				  'pippDataApp.controllers.npps',
 				  'pippDataApp.controllers.budget-timeline',
+				  'pippDataApp.filters.formatters',
 				  'ngRoute', 'ngResource',
 				  'nvd3ChartDirectives',
                                   'pippTimelineDirectives']);

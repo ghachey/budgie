@@ -1,4 +1,5 @@
-/* exported sampleBudget, expectedPathMappings */
+/* exported sampleBudget, expectedPathMappings, 
+ drill1, drill2, drill3, drill4, drill5 */
 
 var sampleBudget = {
     '_id': 'vu-2014',
@@ -12944,4 +12945,513 @@ var expectedPathMappings = {
     'Strategic Management': 'root.categories.PrimeMinistersMinistry.categories.StrategicManagement',
     'Prime Ministers Ministry': 'root.categories.PrimeMinistersMinistry',
     'Vanuatu 2014 Spending': 'root'
+};
+
+var drill1 = {
+    'categories': [
+        {
+            'name': 'Ministry of Education',
+            'current-data': {
+                'aggr': 4177924503,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Payments on Behalf of Government',
+            'current-data': {
+                'aggr': 2721805441,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Health',
+            'current-data': {
+                'aggr': 1642203839,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Infrastructure and Public Utilities',
+            'current-data': {
+                'aggr': 1546656666,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Prime Ministers Ministry',
+            'current-data': {
+                'aggr': 1275491813,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Constitutional Agencies',
+            'current-data': {
+                'aggr': 1129698286,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Finance and Economic Management',
+            'current-data': {
+                'aggr': 949334642,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Grants to Institutions',
+            'current-data': {
+                'aggr': 660717166,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Internal Affairs',
+            'current-data': {
+                'aggr': 608452252,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Agriculture Livestock Forestry Fisheries and Biosecurity',
+            'current-data': {
+                'aggr': 482491212,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Foreign Affairs and External Trade',
+            'current-data': {
+                'aggr': 366022222,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Justice and Community Service',
+            'current-data': {
+                'aggr': 328337089,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Commerce Industry Tourism and Ni-Vanuatu Business',
+            'current-data': {
+                'aggr': 287682822,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Climate Change Adaptation Geohazards Meteorology and Energy',
+            'current-data': {
+                'aggr': 234984045,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Lands Geology and Mines',
+            'current-data': {
+                'aggr': 231598853,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Youth Development and Training',
+            'current-data': {
+                'aggr': 153551748,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Ministry of Civil Aviation Meteorology and Postal Services',
+            'current-data': {
+                'aggr': 0,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Ministry of Cooperatives and Ni-Vanuatu Business Development Services',
+            'current-data': {
+                'aggr': 0,
+                'change': 0
+            },
+            'level': 'Sectoral Expenditure',
+            'drillable': true
+        }
+    ],
+    'currency': 'VATU',
+    'data': {
+        '2012': {
+            'aggr': 15417042635,
+            'change': 0
+        },
+        '2013': {
+            'aggr': 16725995509,
+            'change': 0
+        },
+        '2014': {
+            'aggr': 16796952599,
+            'change': 0
+        }
+    },
+    'multiplier': 1,
+    'name': 'Vanuatu 2014 Spending'
+};
+
+var drill2 = {
+    'categories': [
+        {
+            'name': 'Primary Schools Division',
+            'current-data': {
+                'aggr': 1758641867,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Secondary Schools Division',
+            'current-data': {
+                'aggr': 1176690102,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Technical & Higher Education Division',
+            'current-data': {
+                'aggr': 661884190,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'School Support Services Division',
+            'current-data': {
+                'aggr': 152345540,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Executive Management and Corporate Services',
+            'current-data': {
+                'aggr': 148993229,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'School Administration Division',
+            'current-data': {
+                'aggr': 129589537,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': true
+        },
+        {
+            'name': 'Teaching Services Commission & Other Education Commissions and Councils',
+            'current-data': {
+                'aggr': 103782955,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Cabinet Support',
+            'current-data': {
+                'aggr': 45997083,
+                'change': 0
+            },
+            'level': 'Departmental Expenditure',
+            'drillable': false
+        }
+    ],
+    'data': {
+        '2012': {
+            'aggr': 3945597404,
+            'change': 0
+        },
+        '2013': {
+            'aggr': 4285025195,
+            'change': 0
+        },
+        '2014': {
+            'aggr': 4177924503,
+            'change': 0
+        }
+    },
+    'level': 'Sectoral Expenditure',
+    'name': 'Ministry of Education'
+};
+
+var drill3 = {
+    'data': {
+        '2012': {
+            'aggr': 0,
+            'change': 0
+        },
+        '2013': {
+            'aggr': 311295626,
+            'change': 0
+        },
+        '2014': {
+            'aggr': 130215728,
+            'change': 0
+        }
+    },
+    'level': 'Departmental Expenditure',
+    'name': 'Central Payments',
+    'categories': []
+};
+
+var drill4 = {
+    'data': {
+        '2012': {
+            'aggr': 0,
+            'change': 0
+        },
+        '2013': {
+            'aggr': 0,
+            'change': 0
+        },
+        '2014': {
+            'aggr': 9097194,
+            'change': 0
+        }
+    },
+    'level': 'Subprogramme Expenditure',
+    'name': 'Director - Curative & Hospital Services',
+    'categories': []
+};
+
+var drill5 = {
+    'categories': [
+        {
+            'name': 'Shefa Secondary Schools',
+            'current-data': {
+                'aggr': 271578189,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Catholic Secondary Schools',
+            'current-data': {
+                'aggr': 170891714,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Sanma Secondary Schools',
+            'current-data': {
+                'aggr': 159066016,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Malampa Secondary Schools',
+            'current-data': {
+                'aggr': 122064488,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Tafea Secondary School',
+            'current-data': {
+                'aggr': 95104027,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Secondary Schools Grant',
+            'current-data': {
+                'aggr': 92560000,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Penama Secondary Schools',
+            'current-data': {
+                'aggr': 48566269,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'SDA Secondary Schools',
+            'current-data': {
+                'aggr': 44093433,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Secondary Teachers on Scholarship',
+            'current-data': {
+                'aggr': 33786374,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Church of Malanesia Secondary Schools',
+            'current-data': {
+                'aggr': 30977987,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Protestant Secondary Schools',
+            'current-data': {
+                'aggr': 28836998,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Prebyterian Secondary Schools',
+            'current-data': {
+                'aggr': 25535656,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Church of Christ Secondary Schools',
+            'current-data': {
+                'aggr': 21021891,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Torba Secondary Schools',
+            'current-data': {
+                'aggr': 17784494,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Apostolic Secondary Schools',
+            'current-data': {
+                'aggr': 4826428,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Secondary Teachers Incidentals',
+            'current-data': {
+                'aggr': 3395000,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'NTM Secondary Schools',
+            'current-data': {
+                'aggr': 3238918,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'Bahai\'i Secondary Schools',
+            'current-data': {
+                'aggr': 1774710,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        },
+        {
+            'name': 'VFF Academy Secondary Schools',
+            'current-data': {
+                'aggr': 1587510,
+                'change': 0
+            },
+            'level': 'Programme Expenditure',
+            'drillable': false
+        }
+    ],
+    'data': {
+        '2012': {
+            'aggr': 1137105547,
+            'change': 0
+        },
+        '2013': {
+            'aggr': 1151654328,
+            'change': 0
+        },
+        '2014': {
+            'aggr': 1176690102,
+            'change': 0
+        }
+    },
+    'level': 'Departmental Expenditure',
+    'name': 'Secondary Schools Division'
 };

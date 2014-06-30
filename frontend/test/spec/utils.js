@@ -2,9 +2,212 @@
  drill, getPieChartData, getBarChartData, convertPieToBarData,
  getFirstProperty, objectToArray, getPathMappings,
  sliceByStringElement, groupOthers, endsWith, contains,
- sampleBudget, expectedPathMappings */
+ sampleBudget, expectedPathMappings,
+ drill1, drill2, drill3, drill4, drill5 */
 
 'use strict';
+
+// Some of the sample data is included in a seperate file
+// cause it is very large and cumbersome
+
+describe('Utility: utils.drill', function () {
+  it('should return data of interest from full budget', function () {
+    var path1 = 'root';
+    var path2 = 'root.categories.MinistryofEducation';
+    var path3 = 'root.categories.PaymentsonBehalfofGovernment.categories.CentralPayments';
+    var path4 = 'root.categories.MinistryofHealth.categories.HealthServices.categories.HospitalServices.categories.Director - Curative & Hospital Services';
+    var path5 = 'root.categories.MinistryofEducation.categories.SecondarySchoolsDivision';
+    expect(drill(sampleBudget, path1, 2014)).toEqual(drill1);
+    expect(drill(sampleBudget, path2, 2014)).toEqual(drill2);
+    expect(drill(sampleBudget, path3, 2014)).toEqual(drill3);
+    expect(drill(sampleBudget, path4, 2014)).toEqual(drill4);
+    expect(drill(sampleBudget, path5, 2014)).toEqual(drill5);
+  });
+});
+
+describe('Utility: utils.convertPieToBarData', function () {
+  it('should convert data structure from pie to bar', function () {
+    var pieSample = [
+      {
+        'key': 'Department for Education',
+        'y': 1000000000
+      },
+      {
+        'key': 'Department for Health',
+        'y': 1000000000
+      }
+    ];
+    var expectedBar = [
+      {
+        'key': 'Other',
+        'values': [ [ 'Department for Education' , 1000000000] , 
+                    [ 'Department for Health' , 1000000000] ]
+      }
+    ];
+    expect(convertPieToBarData(pieSample)).toEqual(expectedBar);
+  });
+});
+
+describe('Utility: utils.groupOthers', function () {
+  it('should group a number of pie slice into others', function () {
+    var pieSample =  [
+      {
+        'key': 'Department for Education',
+        'y': 1000000001
+      },
+      {
+        'key': 'Department for Health',
+        'y': 1000000002
+      },
+      {
+        'key': 'Department for Women',
+        'y': 1000000003
+      },
+      {
+        'key': 'Department for Men',
+        'y': 1000000004
+      },
+      {
+        'key': 'Department for Sports',
+        'y': 1000000005
+      },
+      {
+        'key': 'Department for Lazyness',
+        'y': 1000000006
+      }
+    ];
+    var grouped1 =  {
+      'top': [
+        {
+          'key': 'Department for Education',
+          'y': 1000000001
+        },
+        {
+          'key': 'Department for Health',
+          'y': 1000000002
+        },
+        {
+          'key': 'Other',
+          'y': 4000000018
+        }
+      ],
+      'Other': [
+        {
+          'key': 'Other',
+          'values': [
+            [
+              'Department for Women',
+              1000000003
+            ],
+            [
+              'Department for Men',
+              1000000004
+            ],
+            [
+              'Department for Sports',
+              1000000005
+            ],
+            [
+              'Department for Lazyness',
+              1000000006
+            ]
+          ]
+        }
+      ]
+    };
+    var grouped2 = {
+    'top': [
+      {
+        'key': 'Department for Education',
+        'y': 1000000001
+      },
+      {
+        'key': 'Department for Health',
+        'y': 1000000002
+      },
+      {
+        'key': 'Department for Women',
+        'y': 1000000003
+      },
+      {
+        'key': 'Other',
+        'y': 3000000015
+      }
+    ],
+      'Other': [
+        {
+          'key': 'Other',
+          'values': [
+            [
+              'Department for Men',
+              1000000004
+            ],
+            [
+              'Department for Sports',
+              1000000005
+            ],
+            [
+              'Department for Lazyness',
+              1000000006
+            ]
+          ]
+        }
+      ]
+    };
+    expect(function() {groupOthers(pieSample);}).toThrow('No cutoff provided');
+    expect(groupOthers(pieSample, 2)).toEqual(grouped1);
+    expect(groupOthers(pieSample, 3)).toEqual(grouped2);
+  });
+});
+
+describe('Utility: utils.getPieChartData', function () {
+  it('returns data ready for D3 pie charts', function () {
+    var sampleData = [
+      {
+        'name': 'Health Services',
+        'current-data': {
+          'aggr': 1376328792,
+          'change': 0
+        },
+        'level': 'Departmental Expenditure',
+        'drillable': true
+      },
+      {
+        'name': 'Executive Management and Corporate Services',
+        'current-data': {
+          'aggr': 219141293,
+          'change': 0
+        },
+        'level': 'Departmental Expenditure',
+        'drillable': true
+      },
+      {
+        'name': 'Cabinet Support',
+        'current-data': {
+          'aggr': 46733754,
+          'change': 0
+        },
+        'level': 'Departmental Expenditure',
+        'drillable': false
+      }
+    ];
+    var expectedPieData = [
+      {
+        'key': 'Health Services',
+        'y': 1376328792
+      },
+      {
+        'key': 'Executive Management and Corporate Services',
+        'y': 219141293
+      },
+      {
+        'key': 'Cabinet Support',
+        'y': 46733754
+      }
+    ];
+    expect(getPieChartData(sampleData)).toEqual(expectedPieData);
+  });
+});
 
 describe('Utility: utils.objectToArray', function () {
   it('turn object into array of objects', function () {
@@ -66,8 +269,6 @@ describe('Utility: utils.getFirstProperty', function () {
   });
 });
 
-
-
 describe('Utility: utils.getBarChartData', function () {
   var sampleInput = {
     '2013': {
@@ -118,8 +319,6 @@ describe('Utility: utils.getBarChartData', function () {
 
 describe('Utility: utils.getPathMappings', function () {
   it('returns mapping of all possible paths in JSON budget', function () {
-    // Sample used here are very large and included in seperate file
-    // not to trench Emacs performance 
     expect(getPathMappings(sampleBudget)).toEqual(expectedPathMappings);
   });
 });
@@ -149,14 +348,20 @@ describe('Prototype: String.endsWith', function () {
     var sub1 = 'ing';
     var sub2 = 'ingg';
     var sub3 = '3ing';
-    expect(sampleStr.contains(sub1)).toEqual(true);
-    expect(sampleStr.contains(sub2)).toEqual(false);
-    expect(sampleStr.contains(sub3)).toEqual(false);
+    expect(sampleStr.endsWith(sub1)).toEqual(true);
+    expect(sampleStr.endsWith(sub2)).toEqual(false);
+    expect(sampleStr.endsWith(sub3)).toEqual(false);
   });
 });
 
 describe('Prototype: String.contains', function () {
   it('returns true if string contains substring, false otherwise', function () {
-    expect(getPathMappings(sampleBudget)).toEqual(expectedPathMappings);
+    var sampleStr = 'Some longer string';
+    var sub1 = 'ing2';
+    var sub2 = 'r s';
+    var sub3 = 'longer';
+    expect(sampleStr.contains(sub1)).toEqual(false);
+    expect(sampleStr.contains(sub2)).toEqual(true);
+    expect(sampleStr.contains(sub3)).toEqual(true);
   });
 });
