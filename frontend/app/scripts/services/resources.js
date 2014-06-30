@@ -8,7 +8,7 @@ var wsUrl = 'http://localhost:5000'; // for dev, don't commit
 //var wsUrl = 'http://freswota:5000';
 //var wsUrl = 'http://economics.pacificpolicy.org';
 
-angular.module('pippDataApp.services.resources', [])
+angular.module('pippDataApp.services.resources', ['ngResource'])
 
   .factory('MetaFactory', ['$resource', function ($resource) {
     return $resource(wsUrl, {}, {

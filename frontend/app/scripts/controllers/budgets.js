@@ -111,7 +111,7 @@ angular.module('pippDataApp.controllers.budgets',
 	pathMappings = getPathMappings(data);
 	$log.debug('Path mappings: ', pathMappings);
 	rawFromCouch = data; 
-	$log.debug('Data as stored in CouchDB: ', JSON.stringify(rawFromCouch));
+	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
