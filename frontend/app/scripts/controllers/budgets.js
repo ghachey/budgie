@@ -6,7 +6,13 @@
 
 /* Budget controller(s) */
 
-angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
+angular.module('pippDataApp.controllers.budgets', 
+               ['ui.bootstrap', 
+                'ngAnimate', 
+                'ngRoute', 
+                'legendDirectives', 
+                'pippDataApp.services.resources', 
+                'pippDataApp.filters.formatters'])
 
   .controller('BudgetCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $filter, $location, $routeParams, $log, BudgetFactory) {
 
@@ -105,7 +111,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	pathMappings = getPathMappings(data);
 	$log.debug('Path mappings: ', pathMappings);
 	rawFromCouch = data; 
-	$log.debug('Data as stored in CouchDB: ', rawFromCouch);
+	$log.debug('Data as stored in CouchDB: ', JSON.stringify(rawFromCouch));
 
 	// The drill function returns some raw data which
 	// is used within this controller to fullfil the
@@ -366,10 +372,7 @@ angular.module('pippDataApp.controllers.budgets', ['ui.bootstrap', 'ngAnimate', 
 	'in ' + x + '</p>';
     };
 
-  }]);
-
-// One-off charts controller
-angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAnimate', 'legendDirectives'])
+  }])
 
   .controller('oneOffChartsCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', function ($scope, $filter, $location, $routeParams, $log) {
 
@@ -948,10 +951,7 @@ angular.module('pippDataApp.controllers.one-off-charts', ['ui.bootstrap', 'ngAni
 	'<p>' + int2roundKMG((parseFloat(y) * 1000000).toString()) + ' KINA<br />in ' + x + '</p>';
     };
 
-  }]);
-
-
-angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
+  }])
 
   .controller('NPPCtrl', ['$scope', '$filter', '$location', '$routeParams', '$log', 'BudgetFactory', function ($scope, $filter, $location, $routeParams, $log, BudgetFactory) {
 
@@ -1131,9 +1131,7 @@ angular.module('pippDataApp.controllers.npps', ['ui.bootstrap', 'ngAnimate'])
       return int2roundKMG(y.toString());
     };
 
-  }]);
-
-angular.module('pippDataApp.controllers.budget-timeline', ['ui.bootstrap', 'ngAnimate'])
+  }])
 
   .controller('budgetTimeline', ['$scope', function ($scope) {
     

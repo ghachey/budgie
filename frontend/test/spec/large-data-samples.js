@@ -1,6 +1,7 @@
 /* exported sampleBudget, expectedPathMappings, 
  drill1, drill2, drill3, drill4, drill5 */
 
+// This is raw from CouchDB
 var sampleBudget = {
     '_id': 'vu-2014',
     '_rev': '2-aa40c3df190659ec044834da7073bae9',

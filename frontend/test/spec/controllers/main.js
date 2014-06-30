@@ -3,20 +3,25 @@
 describe('Controller: MainCtrl', function () {
 
   // load the controller's module
-  beforeEach(module('pippDataApp'));
+  beforeEach(module('pippDataApp.controllers.main'));
 
   var MainCtrl,
-      scope;
+      $scope;
 
   // Initialize the controller and a mock scope
   beforeEach(inject(function ($controller, $rootScope) {
-    scope = $rootScope.$new();
+    $scope = $rootScope.$new();
     MainCtrl = $controller('MainCtrl', {
-      $scope: scope
+      $scope: $scope
     });
   }));
 
+
+  it('should initialize controller MainCtrl', function(){
+    expect(MainCtrl).toBeDefined();
+  });
+
   it('should attach a list of awesomeThings to the scope', function () {
-    expect(scope.awesomeThings.length).toBe(3);
+    expect($scope.awesomeThings.length).toBe(3);
   });
 });
