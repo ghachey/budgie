@@ -1,7 +1,7 @@
 /* global 
  drill, getPieChartData, getBarChartData, convertPieToBarData,
  getFirstProperty, objectToArray, getPathMappings,
- sliceByStringElement, groupOthers, endsWith, contains,
+ sliceByStringElement, groupOthers,
  sampleBudget, expectedPathMappings,
  drill1, drill2, drill3, drill4, drill5 */
 

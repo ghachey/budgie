@@ -49,7 +49,8 @@ describe('Service: BudgetFactory', function () {
   beforeEach(module('pippDataApp.services.resources'));
 
   var BudgetFactory,
-      mockedBackend;
+      mockedBackend,
+      wsUrl = 'http://localhost:5000';
 
   // Initialize the service
   beforeEach(inject(function (_BudgetFactory_, $httpBackend) {
@@ -76,7 +77,7 @@ describe('Service: BudgetFactory', function () {
     mockedBackend.expectGET(wsUrl + '/budgets/vu-2014').respond(sampleBudget);
     
     var promiseResult;
-    var budget = BudgetFactory
+    BudgetFactory
       .get('vu-2014')
       .success(function(data) {
         promiseResult = data; 
