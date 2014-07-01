@@ -10,7 +10,6 @@ angular.module('pippDataApp.controllers.budgets',
                ['ui.bootstrap', 
                 'ngAnimate', 
                 'ngRoute', 
-                'legendDirectives', 
                 'pippDataApp.services.resources', 
                 'pippDataApp.filters.formatters'])
 
